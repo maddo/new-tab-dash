@@ -870,6 +870,7 @@
         // If we have Jira config, try to use it
         if (JIRA_CONFIG.domain && JIRA_CONFIG.email && JIRA_CONFIG.token) {
             console.log('Found existing Jira config, attempting to use it...');
+            document.getElementById('jiraSetupMessage').style.display = 'none';
             fetchJiraTickets();
         } else {
             console.log('No existing Jira config found');
