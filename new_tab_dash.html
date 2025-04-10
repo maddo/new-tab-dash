@@ -630,17 +630,21 @@
 <body class="theme-dusk">
     <h3>new tab dash</h3>
     <div class="pr-box">
+        <div class="section-header" style="color: var(--text-primary); font-size: 16px; font-weight: 500; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 5px;">GitHub</div>
         <div class="pr-label">
             <span id="prCount">-</span> Pending PR Reviews
+            <a href="https://github.com/pulls/review-requested" target="_blank" class="setup-link" style="margin-left: 10px;">View All Review Requests</a>
         </div>
         <div class="error-message" id="errorMessage"></div>
         <div class="pr-list" id="prList"></div>
         
         <div class="pr-label">
             <span id="myPrCount">-</span> Open PRs
+            <a href="https://github.com/pulls" target="_blank" class="setup-link" style="margin-left: 10px;">View All PRs</a>
         </div>
         <div class="pr-list" id="myPrList"></div>
 
+        <div class="section-header" style="color: var(--text-primary); font-size: 16px; font-weight: 500; margin: 20px 0 15px 0; border-bottom: 1px solid var(--border-color); padding-bottom: 5px;">Jira</div>
         <div class="pr-label">
             <span id="jiraCount">-</span> Jira Tickets
             <a href="#" class="hide-section" id="hideJiraSection" style="display: none;">Hide</a>
