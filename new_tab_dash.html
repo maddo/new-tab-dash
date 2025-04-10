@@ -297,6 +297,41 @@
             color: #fff;
             border-color: #555;
         }
+
+        .cache-info {
+            font-size: 12px;
+            color: #666;
+            font-family: monospace;
+            min-width: 100px;
+            text-align: right;
+            white-space: nowrap;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .cache-info:hover {
+            color: #ff4444;
+        }
+
+        .cache-info::after {
+            content: 'Refresh Results';
+            position: absolute;
+            bottom: 100%;
+            right: 0;
+            background: #333;
+            color: #fff;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            opacity: 0;
+            transition: opacity 0.2s;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        .cache-info:hover::after {
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
@@ -442,7 +477,7 @@
 
             const minutes = Math.floor(maxTimeLeft / 60000);
             const seconds = Math.floor((maxTimeLeft % 60000) / 1000);
-            cacheInfo.textContent = `${minutes}m ${seconds}s`;
+            cacheInfo.textContent = `ttl ${minutes}m ${seconds}s`;
         }
 
         // Initialize cache timer if there's cached data
@@ -953,6 +988,30 @@
                 <span class="jira-ticket-age" style="color: ${ageColor}">${relativeTime}</span>
             `;
         }
+
+        // Add click handler for cache info
+        document.getElementById('cacheInfo').addEventListener('click', () => {
+            // Clear all GitHub caches
+            Object.keys(localStorage)
+                .filter(key => key.startsWith(GITHUB_CONFIG.cachePrefix))
+                .forEach(key => localStorage.removeItem(key));
+            
+            // Clear all Jira caches
+            Object.keys(localStorage)
+                .filter(key => key.startsWith(JIRA_CONFIG.cachePrefix))
+                .forEach(key => localStorage.removeItem(key));
+            
+            // Update the display
+            updateCacheTimer();
+            
+            // Refresh the data
+            if (GITHUB_CONFIG.token) {
+                fetchPRReviews();
+            }
+            if (JIRA_CONFIG.domain && JIRA_CONFIG.email && JIRA_CONFIG.token) {
+                fetchJiraTickets();
+            }
+        });
     </script>
 </body>
 </html>
