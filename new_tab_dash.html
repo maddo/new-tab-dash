@@ -631,22 +631,28 @@
     <h3>new tab dash</h3>
     <div class="pr-box">
         <div class="section-header" style="color: var(--text-primary); font-size: 16px; font-weight: 500; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 5px;">GitHub</div>
+        <div class="pr-label" style="font-size: 13px; margin-top: 10px;">
+            <span id="assignedCount">-</span> <a href="https://github.com/pulls/assigned" target="_blank" class="setup-link">Assigned</a> • 
+            <span id="mentionedCount">-</span> <a href="https://github.com/pulls/mentioned" target="_blank" class="setup-link">Mentioned</a>
+        </div>
         <div class="pr-label">
-            <span id="prCount">-</span> Pending PR Reviews
-            <a href="https://github.com/pulls/review-requested" target="_blank" class="setup-link" style="margin-left: 10px;">View All Review Requests</a>
+            <span id="prCount">-</span> 
+            <a href="https://github.com/pulls/review-requested" target="_blank" class="setup-link" style="margin-left: 10px;">Reviews</a>
         </div>
         <div class="error-message" id="errorMessage"></div>
         <div class="pr-list" id="prList"></div>
         
+
+        
         <div class="pr-label">
-            <span id="myPrCount">-</span> Open PRs
-            <a href="https://github.com/pulls" target="_blank" class="setup-link" style="margin-left: 10px;">View All PRs</a>
+            <span id="myPrCount">-</span> 
+            <a href="https://github.com/pulls" target="_blank" class="setup-link" style="margin-left: 10px;">My PRs</a>
         </div>
         <div class="pr-list" id="myPrList"></div>
 
         <div class="section-header" style="color: var(--text-primary); font-size: 16px; font-weight: 500; margin: 20px 0 15px 0; border-bottom: 1px solid var(--border-color); padding-bottom: 5px;">Jira</div>
         <div class="pr-label">
-            <span id="jiraCount">-</span> Jira Tickets
+            <span id="jiraCount">-</span> <a href="https://jira.atlassian.net/jira/your-work" id="jiraTicketsLink" target="_blank" class="setup-link">Tickets</a>
             <a href="#" class="hide-section" id="hideJiraSection" style="display: none;">Hide</a>
         </div>
         <div class="pr-list" id="jiraList"></div>
@@ -886,7 +892,7 @@
         async function fetchWithCache(url, options = {}) {
             const cachedData = getCachedData(url);
             if (cachedData) {
-                console.log('Using cached data for:', url);
+                // console.log('Using cached data for:', url);
                 return {
                     ok: true,
                     status: 200,
@@ -931,12 +937,12 @@
         }
 
         // Debug logging
-        console.log('Initial token:', GITHUB_CONFIG.token ? 'Present' : 'Missing');
+        // console.log('Initial token:', GITHUB_CONFIG.token ? 'Present' : 'Missing');
         updateTokenDisplay();
 
         async function testToken() {
             try {
-                console.log('Testing token...');
+                // console.log('Testing token...');
                 const response = await fetch('https://api.github.com/user', {
                     headers: {
                         'Authorization': `token ${GITHUB_CONFIG.token}`,
@@ -944,30 +950,30 @@
                     }
                 });
                 
-                console.log('Token test response status:', response.status);
+                // console.log('Token test response status:', response.status);
                 
                 if (response.ok) {
                     const userData = await response.json();
-                    console.log('Token valid, connected as:', userData.login);
+                    // console.log('Token valid, connected as:', userData.login);
                     GITHUB_CONFIG.username = userData.login;
                     localStorage.setItem('githubUsername', userData.login);
                     return true;
                 } else {
                     const errorData = await response.json();
-                    console.error('Token validation failed:', response.status, errorData);
+                    // console.error('Token validation failed:', response.status, errorData);
                     return false;
                 }
             } catch (error) {
-                console.error('Error testing token:', error);
+                // console.error('Error testing token:', error);
                 return false;
             }
         }
 
         async function fetchPRReviews() {
             try {
-                console.log('Fetching PR reviews...');
+                // console.log('Fetching PR reviews...');
                 if (!GITHUB_CONFIG.token) {
-                    console.log('No token found');
+                    // console.log('No token found');
                     document.getElementById('setupMessage').style.display = 'block';
                     document.getElementById('errorMessage').textContent = 'GitHub token not configured';
                     return;
@@ -976,7 +982,7 @@
                 // Test the token first
                 const isValid = await testToken();
                 if (!isValid) {
-                    console.log('Token invalid');
+                    // console.log('Token invalid');
                     document.getElementById('setupMessage').style.display = 'block';
                     document.getElementById('errorMessage').textContent = 'GitHub token is invalid or expired';
                     localStorage.removeItem('githubToken'); // Clear invalid token
@@ -992,10 +998,10 @@
                     }
                 });
 
-                console.log('PR fetch response:', response);
+                // console.log('PR fetch response:', response);
 
                 if (response.status === 401) {
-                    console.log('Token unauthorized');
+                    // console.log('Token unauthorized');
                     document.getElementById('setupMessage').style.display = 'block';
                     document.getElementById('errorMessage').textContent = 'GitHub token is invalid or expired';
                     localStorage.removeItem('githubToken'); // Clear invalid token
@@ -1010,23 +1016,57 @@
                 }
 
                 const data = await response.json();
-                console.log('PR data:', data);
+                // console.log('PR data:', data);
                 const prCount = data.total_count;
                 document.getElementById('prCount').textContent = prCount;
                 
                 // Update PR list
                 const prList = document.getElementById('prList');
                 prList.innerHTML = '';
-                data.items.forEach(pr => {
-                    const repo = pr.repository_url.split('/').slice(-2).join('/');
-                    const prItem = document.createElement('div');
-                    prItem.className = 'pr-item';
-                    prItem.innerHTML = `
-                        <div class="pr-title">${pr.title}</div>
-                        <a href="${pr.html_url}" target="_blank" class="pr-link">${repo}#${pr.number}</a>
-                    `;
-                    prList.appendChild(prItem);
+                
+                if (data.items.length === 0) {
+                    const noReviewsMessage = document.createElement('div');
+                    noReviewsMessage.className = 'pr-item';
+                    noReviewsMessage.innerHTML = 'nothing to review right now. amazing.';
+                    prList.appendChild(noReviewsMessage);
+                } else {
+                    data.items.forEach(pr => {
+                        const repo = pr.repository_url.split('/').slice(-2).join('/');
+                        const prItem = document.createElement('div');
+                        prItem.className = 'pr-item';
+                        prItem.innerHTML = `
+                            <div class="pr-title">${pr.title}</div>
+                            <a href="${pr.html_url}" target="_blank" class="pr-link">${repo}#${pr.number}</a>
+                        `;
+                        prList.appendChild(prItem);
+                    });
+                }
+
+                // Fetch assigned PRs
+                const assignedResponse = await fetchWithCache('https://api.github.com/search/issues?q=is:pr+is:open+assignee:@me', {
+                    headers: {
+                        'Authorization': `token ${GITHUB_CONFIG.token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
                 });
+
+                if (assignedResponse.ok) {
+                    const assignedData = await assignedResponse.json();
+                    document.getElementById('assignedCount').textContent = assignedData.total_count;
+                }
+
+                // Fetch mentioned PRs
+                const mentionedResponse = await fetchWithCache('https://api.github.com/search/issues?q=is:pr+is:open+mentions:@me', {
+                    headers: {
+                        'Authorization': `token ${GITHUB_CONFIG.token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+
+                if (mentionedResponse.ok) {
+                    const mentionedData = await mentionedResponse.json();
+                    document.getElementById('mentionedCount').textContent = mentionedData.total_count;
+                }
 
                 // Fetch user's open PRs
                 const myPrResponse = await fetchWithCache('https://api.github.com/search/issues?q=is:pr+is:open+author:@me', {
@@ -1067,7 +1107,7 @@
         // Setup token saving
         document.getElementById('saveToken').addEventListener('click', async () => {
             const token = document.getElementById('tokenInput').value.trim();
-            console.log('Saving new token...');
+            // console.log('Saving new token...');
             if (token) {
                 localStorage.setItem('githubToken', token);
                 GITHUB_CONFIG.token = token;
@@ -1078,10 +1118,10 @@
 
         // If we have a token, try to use it
         if (GITHUB_CONFIG.token) {
-            console.log('Found existing token, attempting to use it...');
+            // console.log('Found existing token, attempting to use it...');
             fetchPRReviews();
         } else {
-            console.log('No existing token found');
+            // console.log('No existing token found');
             document.getElementById('setupMessage').style.display = 'block';
         }
 
@@ -1104,11 +1144,11 @@
 
         // If we have Jira config, try to use it
         if (JIRA_CONFIG.domain && JIRA_CONFIG.email && JIRA_CONFIG.token) {
-            console.log('Found existing Jira config, attempting to use it...');
+            // console.log('Found existing Jira config, attempting to use it...');
             document.getElementById('jiraSetupMessage').style.display = 'none';
             fetchJiraTickets();
         } else {
-            console.log('No existing Jira config found');
+            // console.log('No existing Jira config found');
             document.getElementById('jiraSetupMessage').style.display = 'block';
         }
 
@@ -1119,27 +1159,51 @@
             const hideJiraSection = document.getElementById('hideJiraSection');
             const toggleJiraVisibility = document.getElementById('toggleJiraVisibility');
             const jiraSetupMessage = document.getElementById('jiraSetupMessage');
+            const jiraTicketsLink = document.getElementById('jiraTicketsLink');
 
-            // If credentials are set, always show the tickets section
-            if (JIRA_CONFIG.domain && JIRA_CONFIG.email && JIRA_CONFIG.token) {
+            // Update Jira tickets link
+            if (JIRA_CONFIG.domain) {
+                let domain = JIRA_CONFIG.domain;
+                if (!domain.includes('.atlassian.net')) {
+                    domain = `${domain}.atlassian.net`;
+                }
+                jiraTicketsLink.href = `https://${domain}/jira/your-work`;
+            }
+
+            // console.log('Current Jira Configuration:', {
+            //     domain: JIRA_CONFIG.domain,
+            //     email: JIRA_CONFIG.email,
+            //     token: JIRA_CONFIG.token ? 'Present' : 'Missing',
+            //     isVisible: JIRA_CONFIG.isVisible
+            // });
+
+            const hasCredentials = JIRA_CONFIG.domain && JIRA_CONFIG.email && JIRA_CONFIG.token;
+
+            if (hasCredentials) {
+                // Update status indicator
+                jiraStatus.className = 'status-icon connected';
+                // Hide setup message
+                jiraSetupMessage.style.display = 'none';
+                // Hide the hide link in the main area
+                hideJiraSection.style.display = 'none';
+                // Show tickets
                 jiraList.style.display = 'block';
                 jiraCount.style.display = 'block';
-                jiraSetupMessage.style.display = 'none';
-                hideJiraSection.style.display = 'none';
                 toggleJiraVisibility.textContent = 'Hide Section';
+                // Clear input fields
+                const inputs = document.querySelectorAll('#jiraDomainInput, #jiraEmailInput, #jiraTokenInput');
+                inputs.forEach(input => input.value = '');
             } else {
-                // No credentials - show/hide based on visibility preference
-                if (JIRA_CONFIG.isVisible) {
-                    jiraSetupMessage.style.display = 'block';
-                    hideJiraSection.style.display = 'inline';
-                    toggleJiraVisibility.textContent = 'Hide Section';
-                } else {
-                    jiraSetupMessage.style.display = 'none';
-                    hideJiraSection.style.display = 'none';
-                    toggleJiraVisibility.textContent = 'Show Section';
-                }
+                // Update status indicator
+                jiraStatus.className = 'status-icon disconnected';
+                // Show/hide setup message based on visibility
+                jiraSetupMessage.style.display = JIRA_CONFIG.isVisible ? 'block' : 'none';
+                // Show/hide the hide link based on visibility
+                hideJiraSection.style.display = JIRA_CONFIG.isVisible ? 'inline' : 'none';
+                // Hide tickets
                 jiraList.style.display = 'none';
                 jiraCount.style.display = 'none';
+                toggleJiraVisibility.textContent = JIRA_CONFIG.isVisible ? 'Hide Section' : 'Show Section';
             }
         }
 
@@ -1156,13 +1220,23 @@
             const jiraList = document.getElementById('jiraList');
             const jiraCount = document.getElementById('jiraCount').parentElement;
             const toggleJiraVisibility = document.getElementById('toggleJiraVisibility');
+            const jiraTicketsLink = document.getElementById('jiraTicketsLink');
 
-            console.log('Current Jira Configuration:', {
-                domain: JIRA_CONFIG.domain,
-                email: JIRA_CONFIG.email,
-                token: JIRA_CONFIG.token ? 'Present' : 'Missing',
-                isVisible: JIRA_CONFIG.isVisible
-            });
+            // Update Jira tickets link
+            if (JIRA_CONFIG.domain) {
+                let domain = JIRA_CONFIG.domain;
+                if (!domain.includes('.atlassian.net')) {
+                    domain = `${domain}.atlassian.net`;
+                }
+                jiraTicketsLink.href = `https://${domain}/jira/your-work`;
+            }
+
+            // console.log('Current Jira Configuration:', {
+            //     domain: JIRA_CONFIG.domain,
+            //     email: JIRA_CONFIG.email,
+            //     token: JIRA_CONFIG.token ? 'Present' : 'Missing',
+            //     isVisible: JIRA_CONFIG.isVisible
+            // });
 
             const hasCredentials = JIRA_CONFIG.domain && JIRA_CONFIG.email && JIRA_CONFIG.token;
 
@@ -1196,15 +1270,15 @@
 
         async function fetchJiraTickets() {
             try {
-                console.log('Fetching Jira tickets...');
-                console.log('Jira Config:', {
-                    domain: JIRA_CONFIG.domain,
-                    email: JIRA_CONFIG.email,
-                    hasToken: !!JIRA_CONFIG.token
-                });
+                // console.log('Fetching Jira tickets...');
+                // console.log('Jira Config:', {
+                //     domain: JIRA_CONFIG.domain,
+                //     email: JIRA_CONFIG.email,
+                //     hasToken: !!JIRA_CONFIG.token
+                // });
 
                 if (!JIRA_CONFIG.domain || !JIRA_CONFIG.email || !JIRA_CONFIG.token) {
-                    console.log('Jira config incomplete');
+                    // console.log('Jira config incomplete');
                     document.getElementById('jiraSetupMessage').style.display = 'block';
                     document.getElementById('jiraStatus').className = 'status-icon disconnected';
                     return;
@@ -1218,7 +1292,7 @@
 
                 // First, test authentication with a simple API call
                 const testUrl = `https://${domain}/rest/api/2/myself`;
-                console.log('Testing Jira authentication...');
+                // console.log('Testing Jira authentication...');
                 
                 const testResponse = await fetch(testUrl, {
                     headers: {
@@ -1235,13 +1309,13 @@
                 }
 
                 const userData = await testResponse.json();
-                console.log('Jira authentication successful, logged in as:', userData.displayName);
+                // console.log('Jira authentication successful, logged in as:', userData.displayName);
                 document.getElementById('jiraStatus').className = 'status-icon connected';
 
                 // Now fetch the tickets
                 const jql = 'assignee=currentUser() AND status not in (Done,Closed,Resolved) ORDER BY priority DESC, updated DESC';
                 const url = `https://${domain}/rest/api/2/search?jql=${encodeURIComponent(jql)}&maxResults=100`;
-                console.log('Fetching Jira tickets from:', url);
+                // console.log('Fetching Jira tickets from:', url);
 
                 const response = await fetchWithCache(url, {
                     headers: {
@@ -1257,11 +1331,11 @@
                 }
 
                 const data = await response.json();
-                console.log('Jira API Response:', {
-                    total: data.total,
-                    numIssues: data.issues?.length || 0,
-                    maxResults: data.maxResults
-                });
+                // console.log('Jira API Response:', {
+                //     total: data.total,
+                //     numIssues: data.issues?.length || 0,
+                //     maxResults: data.maxResults
+                // });
 
                 const ticketCount = data.total;
                 document.getElementById('jiraCount').textContent = ticketCount;
