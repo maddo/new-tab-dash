@@ -98,84 +98,6 @@
             color: #fff;
         }
 
-        .settings-panel {
-            position: absolute;
-            bottom: 40px;
-            right: 20px;
-            background-color: #1a1a1a;
-            border: 1px solid #333;
-            border-radius: 8px;
-            padding: 15px;
-            width: 300px;
-            display: none;
-            z-index: 1000;
-        }
-
-        .settings-panel.visible {
-            display: block;
-        }
-
-        .settings-section {
-            margin-bottom: 15px;
-        }
-
-        .settings-section:last-child {
-            margin-bottom: 0;
-        }
-
-        .settings-section h3 {
-            margin: 0 0 10px 0;
-            font-size: 14px;
-            color: #fff;
-        }
-
-        .settings-section p {
-            margin: 0 0 5px 0;
-            font-size: 12px;
-            color: #888;
-        }
-
-        .connected-as {
-            font-size: 12px;
-            color: #4CAF50;
-            margin-top: 5px;
-        }
-
-        .cache-info {
-            font-size: 12px;
-            color: #666;
-            font-family: monospace;
-            min-width: 100px;
-            text-align: right;
-            white-space: nowrap;
-            cursor: pointer;
-            position: relative;
-        }
-
-        .cache-info:hover {
-            color: #ff4444;
-        }
-
-        .cache-info::after {
-            content: 'Clear Cache';
-            position: absolute;
-            bottom: 100%;
-            right: 0;
-            background: #333;
-            color: #fff;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            opacity: 0;
-            transition: opacity 0.2s;
-            pointer-events: none;
-            white-space: nowrap;
-        }
-
-        .cache-info:hover::after {
-            opacity: 1;
-        }
-
         .pr-count {
             font-size: 24px;
             font-weight: bold;
@@ -438,7 +360,6 @@
 
         <div class="status-bar">
             <div class="status-bar-left">
-                <div class="settings-icon" id="settingsIcon">⚙️</div>
                 <div class="status-icons">
                     <div class="status-icon" id="githubStatus">
                         <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
@@ -456,44 +377,6 @@
                 <div class="user-info" id="userInfo"></div>
                 <div class="cache-info" id="cacheInfo"></div>
             </div>
-        </div>
-    </div>
-
-    <div class="settings-panel" id="settingsPanel">
-        <div class="settings-section">
-            <h3>GitHub Configuration</h3>
-            <p>Status: <span id="githubStatusText">Not connected</span></p>
-            <div id="githubConfig">
-                <input type="text" 
-                       class="token-input" 
-                       id="tokenInput" 
-                       placeholder="Paste your GitHub token here">
-                <button class="save-button" id="saveToken">Save Token</button>
-            </div>
-            <div class="connected-as" id="githubConnectedAs"></div>
-        </div>
-        <div class="settings-section">
-            <h3>Jira Configuration</h3>
-            <p>Status: <span id="jiraStatusText">Not connected</span></p>
-            <div id="jiraConfig">
-                <input type="text" 
-                       class="token-input" 
-                       id="jiraDomainInput" 
-                       placeholder="Your Jira domain (e.g., company.atlassian.net)">
-                <input type="text" 
-                       class="token-input" 
-                       id="jiraEmailInput" 
-                       placeholder="Your Jira email">
-                <input type="text" 
-                       class="token-input" 
-                       id="jiraTokenInput" 
-                       placeholder="Your Jira API token">
-                <button class="save-button" id="saveJiraConfig">Save Jira Config</button>
-            </div>
-        </div>
-        <div class="settings-section">
-            <h3>Cache Management</h3>
-            <button class="clear-cache-button" id="clearCache">Clear All Caches</button>
         </div>
     </div>
 
@@ -532,7 +415,7 @@
                 return;
             }
 
-            let minTimeLeft = GITHUB_CONFIG.cacheDuration;
+            let maxTimeLeft = 0;
             let hasValidCache = false;
             
             allCacheKeys.forEach(key => {
@@ -541,14 +424,14 @@
                     const timeLeft = GITHUB_CONFIG.cacheDuration - (Date.now() - timestamp);
                     if (timeLeft > 0) {
                         hasValidCache = true;
-                        minTimeLeft = Math.min(minTimeLeft, timeLeft);
+                        maxTimeLeft = Math.max(maxTimeLeft, timeLeft);
                     }
                 } catch (e) {
                     console.error('Cache parse error:', e);
                 }
             });
 
-            if (!hasValidCache || minTimeLeft <= 0) {
+            if (!hasValidCache || maxTimeLeft <= 0) {
                 cacheInfo.textContent = '';
                 if (GITHUB_CONFIG.cacheTimer) {
                     clearInterval(GITHUB_CONFIG.cacheTimer);
@@ -557,8 +440,8 @@
                 return;
             }
 
-            const minutes = Math.floor(minTimeLeft / 60000);
-            const seconds = Math.floor((minTimeLeft % 60000) / 1000);
+            const minutes = Math.floor(maxTimeLeft / 60000);
+            const seconds = Math.floor((maxTimeLeft % 60000) / 1000);
             cacheInfo.textContent = `${minutes}m ${seconds}s`;
         }
 
@@ -655,25 +538,17 @@
         }
 
         function updateTokenDisplay() {
-            const tokenInfo = document.getElementById('tokenInfo');
-            const tokenInput = document.getElementById('tokenInput');
-            const saveButton = document.getElementById('saveToken');
             const setupMessage = document.getElementById('setupMessage');
             const githubStatus = document.getElementById('githubStatus');
-            const githubStatusText = document.getElementById('githubStatusText');
 
             if (GITHUB_CONFIG.token) {
                 // Update status indicator
                 githubStatus.className = 'status-icon connected';
-                githubStatusText.textContent = 'Connected';
-                
                 // Hide setup message
                 setupMessage.style.display = 'none';
             } else {
                 // Update status indicator
                 githubStatus.className = 'status-icon disconnected';
-                githubStatusText.textContent = 'Not connected';
-                
                 // Show setup message
                 setupMessage.style.display = 'block';
             }
@@ -698,17 +573,14 @@
                 if (response.ok) {
                     const userData = await response.json();
                     console.log('Token valid, connected as:', userData.login);
-                    document.getElementById('githubConnectedAs').textContent = `Connected as: ${userData.login}`;
                     return true;
                 } else {
                     const errorData = await response.json();
                     console.error('Token validation failed:', response.status, errorData);
-                    document.getElementById('githubConnectedAs').textContent = '';
                     return false;
                 }
             } catch (error) {
                 console.error('Error testing token:', error);
-                document.getElementById('githubConnectedAs').textContent = '';
                 return false;
             }
         }
@@ -849,21 +721,6 @@
                 JIRA_CONFIG.token = token;
                 updateJiraDisplay();
                 await fetchJiraTickets();
-            }
-        });
-
-        // Settings panel toggle
-        document.getElementById('settingsIcon').addEventListener('click', () => {
-            const settingsPanel = document.getElementById('settingsPanel');
-            settingsPanel.classList.toggle('visible');
-        });
-
-        // Close settings panel when clicking outside
-        document.addEventListener('click', (event) => {
-            const settingsPanel = document.getElementById('settingsPanel');
-            const settingsIcon = document.getElementById('settingsIcon');
-            if (!settingsPanel.contains(event.target) && !settingsIcon.contains(event.target)) {
-                settingsPanel.classList.remove('visible');
             }
         });
 
