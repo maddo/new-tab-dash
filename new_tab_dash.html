@@ -413,7 +413,8 @@
         }
 
         .theme-selector:hover {
-            max-width: 200px;
+            max-width: none;
+            width: auto;
         }
 
         .theme-icon {
@@ -424,24 +425,29 @@
             transition: all 0.2s;
             border: 2px solid transparent;
             flex-shrink: 0;
+            opacity: 0.5;
         }
 
         .theme-icon:hover {
             transform: scale(1.1);
+            opacity: 1;
         }
 
         .theme-icon.active {
             border-color: var(--text-primary);
-        }
-
-        .theme-icon:not(.active) {
-            opacity: 0;
-            transform: translateX(20px);
-        }
-
-        .theme-selector:hover .theme-icon:not(.active) {
             opacity: 1;
-            transform: translateX(0);
+        }
+
+        .theme-selector:hover .theme-icon {
+            opacity: 0.5;
+        }
+
+        .theme-selector:hover .theme-icon:hover {
+            opacity: 1;
+        }
+
+        .theme-selector:hover .theme-icon.active {
+            opacity: 1;
         }
 
         /* Dusk Theme (Current) */
@@ -1508,9 +1514,26 @@
                 // Add active class to clicked icon
                 icon.classList.add('active');
                 // Apply the theme
-                document.body.className = icon.classList[1];
+                const themeClass = icon.classList[1];
+                document.body.className = themeClass;
+                // Save the selected theme
+                localStorage.setItem('selectedTheme', themeClass);
             });
         });
+
+        // Load saved theme on page load
+        const savedTheme = localStorage.getItem('selectedTheme');
+        if (savedTheme) {
+            document.body.className = savedTheme;
+            // Update active theme icon
+            document.querySelectorAll('.theme-icon').forEach(icon => {
+                if (icon.classList.contains(savedTheme)) {
+                    icon.classList.add('active');
+                } else {
+                    icon.classList.remove('active');
+                }
+            });
+        }
     </script>
 </body>
 </html>
