@@ -148,6 +148,32 @@
             min-width: 100px;
             text-align: right;
             white-space: nowrap;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .cache-info:hover {
+            color: #ff4444;
+        }
+
+        .cache-info::after {
+            content: 'Clear Cache';
+            position: absolute;
+            bottom: 100%;
+            right: 0;
+            background: #333;
+            color: #fff;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            opacity: 0;
+            transition: opacity 0.2s;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        .cache-info:hover::after {
+            opacity: 1;
         }
 
         .pr-count {
@@ -283,6 +309,22 @@
             margin: 8px 0;
             padding-left: 10px;
             border-left: 2px solid #3b7fc4;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .jira-ticket-content {
+            flex: 1;
+        }
+
+        .jira-ticket-age {
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            margin-left: 10px;
+            color: #888;
+            font-family: 'Inter', sans-serif;
         }
 
         .jira-key {
@@ -314,6 +356,24 @@
 
         .clear-cache-button:hover {
             background: #cc0000;
+        }
+
+        .load-more-button {
+            background: #333;
+            color: #888;
+            border: 1px solid #444;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-top: 10px;
+            transition: all 0.2s;
+        }
+
+        .load-more-button:hover {
+            background: #444;
+            color: #fff;
+            border-color: #555;
         }
     </style>
 </head>
@@ -499,7 +559,7 @@
 
             const minutes = Math.floor(minTimeLeft / 60000);
             const seconds = Math.floor((minTimeLeft % 60000) / 1000);
-            cacheInfo.textContent = `Cache: ${minutes}m ${seconds}s`;
+            cacheInfo.textContent = `${minutes}m ${seconds}s`;
         }
 
         // Initialize cache timer if there's cached data
@@ -775,12 +835,55 @@
             document.getElementById('setupMessage').style.display = 'block';
         }
 
+        // Setup Jira config saving
+        document.getElementById('saveJiraConfig').addEventListener('click', async () => {
+            const domain = document.getElementById('jiraDomainInput').value.trim();
+            const email = document.getElementById('jiraEmailInput').value.trim();
+            const token = document.getElementById('jiraTokenInput').value.trim();
+            
+            if (domain && email && token) {
+                localStorage.setItem('jiraDomain', domain);
+                localStorage.setItem('jiraEmail', email);
+                localStorage.setItem('jiraToken', token);
+                
+                JIRA_CONFIG.domain = domain;
+                JIRA_CONFIG.email = email;
+                JIRA_CONFIG.token = token;
+                
+                updateJiraDisplay();
+                await fetchJiraTickets();
+            }
+        });
+
+        // Settings panel toggle
+        document.getElementById('settingsIcon').addEventListener('click', () => {
+            const settingsPanel = document.getElementById('settingsPanel');
+            settingsPanel.classList.toggle('visible');
+        });
+
+        // Close settings panel when clicking outside
+        document.addEventListener('click', (event) => {
+            const settingsPanel = document.getElementById('settingsPanel');
+            const settingsIcon = document.getElementById('settingsIcon');
+            
+            if (!settingsPanel.contains(event.target) && !settingsIcon.contains(event.target)) {
+                settingsPanel.classList.remove('visible');
+            }
+        });
+
+        // If we have Jira config, try to use it
+        if (JIRA_CONFIG.domain && JIRA_CONFIG.email && JIRA_CONFIG.token) {
+            console.log('Found existing Jira config, attempting to use it...');
+            fetchJiraTickets();
+        } else {
+            console.log('No existing Jira config found');
+            document.getElementById('jiraSetupMessage').style.display = 'block';
+        }
+
         function updateJiraDisplay() {
-            const jiraInfo = document.getElementById('jiraInfo');
             const jiraDomainInput = document.getElementById('jiraDomainInput');
             const jiraEmailInput = document.getElementById('jiraEmailInput');
             const jiraTokenInput = document.getElementById('jiraTokenInput');
-            const saveJiraButton = document.getElementById('saveJiraConfig');
             const jiraSetupMessage = document.getElementById('jiraSetupMessage');
             const jiraStatus = document.getElementById('jiraStatus');
             const jiraStatusText = document.getElementById('jiraStatusText');
@@ -798,6 +901,10 @@
                 
                 // Hide setup message
                 jiraSetupMessage.style.display = 'none';
+                
+                // Clear input fields in both locations
+                const inputs = document.querySelectorAll('#jiraDomainInput, #jiraEmailInput, #jiraTokenInput');
+                inputs.forEach(input => input.value = '');
             } else {
                 // Update status indicator
                 jiraStatus.className = 'status-icon disconnected';
@@ -850,8 +957,8 @@
                 console.log('Jira authentication successful, logged in as:', userData.displayName);
 
                 // Now fetch the tickets
-                const jql = 'assignee=currentUser() AND status not in (Done,Closed)';
-                const url = `https://${domain}/rest/api/2/search?jql=${encodeURIComponent(jql)}`;
+                const jql = 'assignee=currentUser() AND status not in (Done,Closed,Resolved) ORDER BY priority DESC, updated DESC';
+                const url = `https://${domain}/rest/api/2/search?jql=${encodeURIComponent(jql)}&maxResults=100`;
                 console.log('Fetching Jira tickets from:', url);
 
                 const response = await fetchWithCache(url, {
@@ -882,28 +989,45 @@
                 jiraList.innerHTML = '';
                 
                 if (data.issues && data.issues.length > 0) {
-                    data.issues.forEach(ticket => {
+                    // Show first 6 tickets
+                    const initialTickets = data.issues.slice(0, 6);
+                    const remainingTickets = data.issues.slice(6);
+                    
+                    initialTickets.forEach(ticket => {
                         const ticketItem = document.createElement('div');
                         ticketItem.className = 'jira-ticket';
-                        
-                        let statusClass = 'status-todo';
-                        if (ticket.fields.status.name.toLowerCase().includes('progress')) {
-                            statusClass = 'status-in-progress';
-                        } else if (ticket.fields.status.name.toLowerCase().includes('done')) {
-                            statusClass = 'status-done';
-                        }
-                        
-                        ticketItem.innerHTML = `
-                            <div class="pr-title">
-                                <span class="jira-key">${ticket.key}</span>
-                                <span class="jira-status ${statusClass}">${ticket.fields.status.name}</span>
-                            </div>
-                            <a href="https://${domain}/browse/${ticket.key}" 
-                               target="_blank" 
-                               class="pr-link">${ticket.fields.summary}</a>
-                        `;
+                        ticketItem.innerHTML = createTicketHTML(ticket, domain);
                         jiraList.appendChild(ticketItem);
                     });
+
+                    // Add load more button if there are more tickets
+                    if (remainingTickets.length > 0) {
+                        const loadMoreButton = document.createElement('button');
+                        loadMoreButton.className = 'load-more-button';
+                        loadMoreButton.textContent = `Load ${Math.min(10, remainingTickets.length)} more tickets`;
+                        
+                        let displayedTickets = 6;
+                        loadMoreButton.addEventListener('click', () => {
+                            const nextBatch = data.issues.slice(displayedTickets, displayedTickets + 10);
+                            nextBatch.forEach(ticket => {
+                                const ticketItem = document.createElement('div');
+                                ticketItem.className = 'jira-ticket';
+                                ticketItem.innerHTML = createTicketHTML(ticket, domain);
+                                jiraList.insertBefore(ticketItem, loadMoreButton);
+                            });
+                            
+                            displayedTickets += nextBatch.length;
+                            
+                            if (displayedTickets >= data.issues.length) {
+                                loadMoreButton.remove();
+                            } else {
+                                const remaining = data.issues.length - displayedTickets;
+                                loadMoreButton.textContent = `Load ${Math.min(10, remaining)} more tickets`;
+                            }
+                        });
+                        
+                        jiraList.appendChild(loadMoreButton);
+                    }
                 } else {
                     jiraList.innerHTML = '<div class="pr-item">No tickets found</div>';
                 }
@@ -920,77 +1044,66 @@
             }
         }
 
-        // Setup Jira config saving
-        document.getElementById('saveJiraConfig').addEventListener('click', async () => {
-            const domain = document.getElementById('jiraDomainInput').value.trim();
-            const email = document.getElementById('jiraEmailInput').value.trim();
-            const token = document.getElementById('jiraTokenInput').value.trim();
-            
-            if (domain && email && token) {
-                // Ensure domain is in correct format
-                let fullDomain = domain;
-                if (!domain.includes('.atlassian.net')) {
-                    fullDomain = `${domain}.atlassian.net`;
-                }
-                
-                localStorage.setItem('jiraDomain', fullDomain);
-                localStorage.setItem('jiraEmail', email);
-                localStorage.setItem('jiraToken', token);
-                JIRA_CONFIG.domain = fullDomain;
-                JIRA_CONFIG.email = email;
-                JIRA_CONFIG.token = token;
-                updateJiraDisplay();
-                await fetchJiraTickets();
+        // Helper function to create ticket HTML
+        function createTicketHTML(ticket, domain) {
+            let statusClass = 'status-todo';
+            if (ticket.fields.status.name.toLowerCase().includes('progress')) {
+                statusClass = 'status-in-progress';
+            } else if (ticket.fields.status.name.toLowerCase().includes('done')) {
+                statusClass = 'status-done';
             }
-        });
 
-        // Initialize Jira display
-        updateJiraDisplay();
-        if (JIRA_CONFIG.domain && JIRA_CONFIG.email && JIRA_CONFIG.token) {
-            fetchJiraTickets();
+            // Calculate relative time and color
+            const updatedTime = new Date(ticket.fields.updated);
+            const now = new Date();
+            const diffDays = Math.floor((now - updatedTime) / (1000 * 60 * 60 * 24));
+            const diffHours = Math.floor((now - updatedTime) / (1000 * 60 * 60));
+            
+            let relativeTime;
+            if (diffDays > 0) {
+                relativeTime = `${diffDays}d`;
+            } else if (diffHours > 0) {
+                relativeTime = `${diffHours}h`;
+            } else {
+                relativeTime = '<1h';
+            }
+
+            // Color scale: green (new) -> yellow -> red (old)
+            // 0-1 day: green
+            // 1-3 days: yellow-green
+            // 3-7 days: yellow
+            // 7-14 days: orange
+            // 14+ days: red
+            let ageColor;
+            if (diffDays === 0) {
+                ageColor = '#44ff44'; // green
+            } else if (diffDays <= 1) {
+                ageColor = '#88ff44'; // yellow-green
+            } else if (diffDays <= 3) {
+                ageColor = '#ffff44'; // yellow
+            } else if (diffDays <= 7) {
+                ageColor = '#ff8844'; // orange
+            } else {
+                ageColor = '#ff4444'; // red
+            }
+            
+            return `
+                <div class="jira-ticket-content">
+                    <div class="pr-title">
+                        <span class="jira-key">${ticket.key}</span>
+                        <span class="jira-status ${statusClass}">${ticket.fields.status.name}</span>
+                        <span class="jira-priority" style="color: ${ticket.fields.priority.iconUrl.includes('highest') ? '#ff4444' : 
+                                                                 ticket.fields.priority.iconUrl.includes('high') ? '#ff8844' : 
+                                                                 ticket.fields.priority.iconUrl.includes('medium') ? '#ffcc44' : 
+                                                                 '#44ff44'}">${ticket.fields.priority.name}</span>
+                    </div>
+                    <a href="https://${domain}/browse/${ticket.key}" 
+                       target="_blank" 
+                       class="pr-link">${ticket.fields.summary}</a>
+                </div>
+                <span class="jira-ticket-age" style="color: ${ageColor}">${relativeTime}</span>
+            `;
         }
-
-        // Settings panel toggle
-        document.getElementById('settingsIcon').addEventListener('click', () => {
-            const settingsPanel = document.getElementById('settingsPanel');
-            settingsPanel.classList.toggle('visible');
-        });
-
-        // Close settings panel when clicking outside
-        document.addEventListener('click', (event) => {
-            const settingsPanel = document.getElementById('settingsPanel');
-            const settingsIcon = document.getElementById('settingsIcon');
-            if (!settingsPanel.contains(event.target) && event.target !== settingsIcon) {
-                settingsPanel.classList.remove('visible');
-            }
-        });
-
-        // Cache management functions
-        function clearAllCaches() {
-            // Clear GitHub caches
-            Object.keys(localStorage)
-                .filter(key => key.startsWith(GITHUB_CONFIG.cachePrefix))
-                .forEach(key => localStorage.removeItem(key));
-            
-            // Clear Jira caches
-            Object.keys(localStorage)
-                .filter(key => key.startsWith(JIRA_CONFIG.cachePrefix))
-                .forEach(key => localStorage.removeItem(key));
-            
-            // Update cache timer
-            updateCacheTimer();
-            
-            // Refresh data
-            if (GITHUB_CONFIG.token) {
-                fetchPRReviews();
-            }
-            if (JIRA_CONFIG.domain && JIRA_CONFIG.email && JIRA_CONFIG.token) {
-                fetchJiraTickets();
-            }
-        }
-
-        // Add event listener for clear cache button
-        document.getElementById('clearCache').addEventListener('click', clearAllCaches);
     </script>
 </body>
 </html>
