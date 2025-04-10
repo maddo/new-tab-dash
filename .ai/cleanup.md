@@ -3,7 +3,7 @@
 ## HTML/CSS Improvements
 - [x] CSS Organization
   - [x] Move all CSS styles to a separate stylesheet file
-  - [ ] Group related styles together (status bar, modal, etc.)
+  - [x] Group related styles together (status bar, modal, etc.)
   - [ ] Implement CSS variables for repeated color values
 
 - [ ] HTML Structure

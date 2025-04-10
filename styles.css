@@ -1,7 +1,22 @@
-/* Base Styles */
+/* ==========================================================================
+   Base Styles
+   ========================================================================== */
+:root {
+    /* Theme Variables */
+    --primary-bg: #000000;
+    --secondary-bg: #2a1f35;
+    --border-color: #6C5B7B;
+    --text-primary: #ffffff;
+    --text-secondary: #F8B195;
+    --text-accent: #C06C84;
+    --status-todo: #2a1f35;
+    --status-in-progress: #6C5B7B;
+    --status-done: #C06C84;
+}
+
 body {
-    background-color: #000000;
-    color: #ffffff;
+    background-color: var(--primary-bg);
+    color: var(--text-primary);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     margin: 0;
     padding: 0;
@@ -12,10 +27,14 @@ body {
     justify-content: center;
 }
 
-/* PR Box Styles */
+/* ==========================================================================
+   Layout Components
+   ========================================================================== */
+
+/* PR Box Container */
 .pr-box {
-    background-color: #2a1f35;
-    border: 1px solid #6C5B7B;
+    background-color: var(--secondary-bg);
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     padding: 20px;
     margin-top: 20px;
@@ -25,20 +44,20 @@ body {
     padding-bottom: 40px; /* Make room for status bar */
 }
 
-/* Status Bar Styles */
+/* Status Bar */
 .status-bar {
     position: absolute;
     bottom: 0;
     left: 0;
     right: 0;
     padding: 8px 20px;
-    background-color: #2a1f35;
-    border-top: 1px solid #6C5B7B;
+    background-color: var(--secondary-bg);
+    border-top: 1px solid var(--border-color);
     display: flex;
     justify-content: space-between;
     align-items: center;
     font-size: 12px;
-    color: #F8B195;
+    color: var(--text-secondary);
     gap: 20px;
 }
 
@@ -52,6 +71,276 @@ body {
     display: flex;
     align-items: center;
     gap: 20px;
+}
+
+/* ==========================================================================
+   Modal Components
+   ========================================================================== */
+
+/* Credential Modal */
+.credential-modal {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--secondary-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px;
+    min-width: 200px;
+    z-index: 1000;
+    display: none;
+    font-size: 12px;
+    color: var(--text-secondary);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.status-icon:hover .credential-modal {
+    display: block;
+}
+
+.credential-info {
+    margin-bottom: 8px;
+}
+
+.credential-info:last-child {
+    margin-bottom: 0;
+}
+
+.credential-label {
+    color: var(--text-accent);
+    margin-right: 4px;
+}
+
+.credential-value {
+    font-family: monospace;
+}
+
+/* ==========================================================================
+   Button and Link Styles
+   ========================================================================== */
+
+.remove-credentials {
+    color: var(--text-accent);
+    text-decoration: none;
+    font-size: 12px;
+    margin-top: 8px;
+    display: inline-block;
+    cursor: pointer;
+}
+
+.remove-credentials:hover {
+    text-decoration: underline;
+}
+
+.settings-icon {
+    cursor: pointer;
+    color: var(--text-accent);
+    font-size: 16px;
+    transition: color 0.2s;
+}
+
+.settings-icon:hover {
+    color: var(--text-secondary);
+}
+
+.save-button {
+    background: var(--text-accent);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    display: block;
+    margin-top: 10px;
+}
+
+.save-button:hover {
+    background: #F67280;
+}
+
+/* ==========================================================================
+   PR List Components
+   ========================================================================== */
+
+.pr-list {
+    margin-top: 15px;
+    text-align: left;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.pr-item {
+    margin: 8px 0;
+    padding-left: 10px;
+    border-left: 2px solid var(--border-color);
+    transition: all 0.2s ease;
+}
+
+.pr-item:hover {
+    border-left-color: var(--text-secondary);
+    transform: translateX(4px);
+}
+
+.pr-title {
+    font-weight: 500;
+    margin-bottom: 2px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pr-repo {
+    color: var(--text-accent);
+    font-size: 0.9em;
+    font-family: monospace;
+}
+
+.pr-number {
+    color: var(--text-accent);
+    font-family: monospace;
+}
+
+.pr-age {
+    font-size: 0.8em;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-left: auto;
+}
+
+.pr-age-new { background-color: rgba(46, 204, 113, 0.2); color: #2ecc71; }
+.pr-age-recent { background-color: rgba(255, 204, 68, 0.2); color: #ffcc44; }
+.pr-age-old { background-color: rgba(255, 68, 68, 0.2); color: #ff4444; }
+
+.pr-link {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-family: monospace;
+}
+
+.pr-link:hover {
+    text-decoration: underline;
+}
+
+/* ==========================================================================
+   Jira Components
+   ========================================================================== */
+
+.jira-info {
+    font-size: 12px;
+    color: var(--text-accent);
+    font-family: monospace;
+    white-space: nowrap;
+    min-width: 150px;
+}
+
+.jira-ticket {
+    margin: 8px 0;
+    padding-left: 10px;
+    border-left: 2px solid #3b7fc4;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.jira-ticket-content {
+    flex: 1;
+}
+
+.jira-key {
+    font-weight: bold;
+    color: var(--text-secondary);
+}
+
+.jira-status {
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.8em;
+}
+
+.status-todo { background-color: var(--status-todo); color: var(--text-secondary); }
+.status-in-progress { background-color: var(--status-in-progress); color: var(--text-primary); }
+.status-done { background-color: var(--status-done); color: var(--text-primary); }
+
+/* ==========================================================================
+   Theme System
+   ========================================================================== */
+
+.theme-selector {
+    position: relative;
+    display: flex;
+    gap: 8px;
+    padding: 8px;
+    background: var(--secondary-bg);
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+}
+
+.theme-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.theme-icon:hover {
+    transform: scale(1.1);
+}
+
+.theme-icon.active {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 2px var(--text-secondary);
+}
+
+/* Theme-specific styles */
+.theme-dusk { background: linear-gradient(135deg, #2a1f35, #6C5B7B); }
+.theme-sunrise { background: linear-gradient(135deg, #F8B195, #F67280); }
+.theme-sunset { background: linear-gradient(135deg, #C06C84, #6C5B7B); }
+.theme-aurora { background: linear-gradient(135deg, #355C7D, #6C5B7B); }
+.theme-twilight { background: linear-gradient(135deg, #2a1f35, #355C7D); }
+.theme-ocean { background: linear-gradient(135deg, #355C7D, #C06C84); }
+
+/* ==========================================================================
+   Utility Classes
+   ========================================================================== */
+
+.hide-section {
+    display: none;
+}
+
+.error-message {
+    color: #ff4444;
+    font-size: 12px;
+    margin-top: 8px;
+}
+
+.cache-info {
+    position: relative;
+    cursor: help;
+}
+
+.cache-info::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--secondary-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s;
+}
+
+.cache-info:hover::after {
+    opacity: 1;
+    visibility: visible;
 }
 
 /* Status Icons */
@@ -85,59 +374,7 @@ body {
     fill: currentColor;
 }
 
-/* Credential Modal */
-.credential-modal {
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #2a1f35;
-    border: 1px solid #6C5B7B;
-    border-radius: 8px;
-    padding: 12px;
-    min-width: 200px;
-    z-index: 1000;
-    display: none;
-    font-size: 12px;
-    color: #F8B195;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-}
-
-.status-icon:hover .credential-modal {
-    display: block;
-}
-
-.credential-info {
-    margin-bottom: 8px;
-}
-
-.credential-info:last-child {
-    margin-bottom: 0;
-}
-
-.credential-label {
-    color: #C06C84;
-    margin-right: 4px;
-}
-
-.credential-value {
-    font-family: monospace;
-}
-
 /* Buttons and Links */
-.remove-credentials {
-    color: #C06C84;
-    text-decoration: none;
-    font-size: 12px;
-    margin-top: 8px;
-    display: inline-block;
-    cursor: pointer;
-}
-
-.remove-credentials:hover {
-    text-decoration: underline;
-}
-
 .settings-icon {
     cursor: pointer;
     color: #C06C84;
@@ -147,157 +384,6 @@ body {
 
 .settings-icon:hover {
     color: #F8B195;
-}
-
-.save-button {
-    background: #C06C84;
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    display: block;
-    margin-top: 10px;
-}
-
-.save-button:hover {
-    background: #F67280;
-}
-
-/* PR List Styles */
-.pr-list {
-    margin-top: 15px;
-    text-align: left;
-    font-size: 12px;
-    color: #F8B195;
-}
-
-.pr-item {
-    margin: 8px 0;
-    padding-left: 10px;
-    border-left: 2px solid #6C5B7B;
-    transition: all 0.2s ease;
-}
-
-.pr-item:hover {
-    border-left-color: #F8B195;
-    transform: translateX(4px);
-}
-
-.pr-title {
-    font-weight: 500;
-    margin-bottom: 2px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.pr-repo {
-    color: #C06C84;
-    font-size: 0.9em;
-    font-family: monospace;
-}
-
-.pr-number {
-    color: #C06C84;
-    font-family: monospace;
-}
-
-.pr-age {
-    font-size: 0.8em;
-    padding: 2px 6px;
-    border-radius: 3px;
-    margin-left: auto;
-}
-
-.pr-age-new { background-color: rgba(46, 204, 113, 0.2); color: #2ecc71; }
-.pr-age-recent { background-color: rgba(255, 204, 68, 0.2); color: #ffcc44; }
-.pr-age-old { background-color: rgba(255, 68, 68, 0.2); color: #ff4444; }
-
-.pr-link {
-    color: #F8B195;
-    text-decoration: none;
-    font-family: monospace;
-}
-
-.pr-link:hover {
-    text-decoration: underline;
-}
-
-/* Jira Styles */
-.jira-info {
-    font-size: 12px;
-    color: #C06C84;
-    font-family: monospace;
-    white-space: nowrap;
-    min-width: 150px;
-}
-
-.jira-ticket {
-    margin: 8px 0;
-    padding-left: 10px;
-    border-left: 2px solid #3b7fc4;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-}
-
-.jira-ticket-content {
-    flex: 1;
-}
-
-.jira-ticket-age {
-    font-size: 11px;
-    padding: 2px 6px;
-    border-radius: 3px;
-    margin-left: 10px;
-    color: #C06C84;
-    font-family: 'Inter', sans-serif;
-}
-
-.hide-section {
-    font-size: 12px;
-    color: #C06C84;
-    text-decoration: none;
-    margin-left: 10px;
-    cursor: pointer;
-}
-
-.hide-section:hover {
-    text-decoration: underline;
-}
-
-.jira-key {
-    color: #F8B195;
-    font-weight: 500;
-}
-
-.jira-status {
-    font-size: 11px;
-    padding: 2px 6px;
-    border-radius: 3px;
-    margin-left: 8px;
-}
-
-.status-todo { background-color: #2a1f35; color: #F8B195; }
-.status-in-progress { background-color: #6C5B7B; color: #fff; }
-.status-done { background-color: #C06C84; color: #fff; }
-
-/* Cache and Loading */
-.clear-cache-button {
-    background: #C06C84;
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    margin-top: 10px;
-}
-
-.clear-cache-button:hover {
-    background: #F67280;
 }
 
 .load-more-button {
@@ -353,22 +439,92 @@ body {
     opacity: 1;
 }
 
-/* Theme Selector */
-.theme-selector {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    display: flex;
-    gap: 10px;
-    background: rgba(0, 0, 0, 0.7);
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-    transition: all 0.3s ease;
-    overflow: hidden;
-    max-width: 24px;
+/* Section Headers */
+.section-header {
+    color: var(--text-primary);
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 15px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 5px;
 }
 
+/* Form Elements */
+.token-input {
+    background: var(--primary-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 8px;
+    border-radius: 4px;
+    width: 100%;
+    margin: 10px 0;
+    font-family: monospace;
+    display: block;
+}
+
+/* Counters and Labels */
+.pr-count {
+    font-size: 24px;
+    font-weight: bold;
+    margin: 10px 0;
+}
+
+.pr-label {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-top: 20px;
+}
+
+.pr-label:first-of-type {
+    margin-top: 0;
+}
+
+/* Messages */
+.setup-message {
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin-top: 10px;
+    text-align: center;
+}
+
+.setup-link {
+    color: var(--text-primary);
+    text-decoration: none;
+}
+
+.setup-link:hover {
+    text-decoration: underline;
+}
+
+/* User Info */
+.user-info {
+    font-size: 12px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    min-width: 150px;
+}
+
+.token-info {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-family: monospace;
+    white-space: nowrap;
+    min-width: 150px;
+}
+
+.clear-token {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 12px;
+    margin-left: 10px;
+    cursor: pointer;
+}
+
+.clear-token:hover {
+    text-decoration: underline;
+}
+
+/* Theme Selector */
 .theme-selector:hover {
     max-width: none;
     width: auto;
@@ -430,19 +586,6 @@ body {
 
 .theme-icon.theme-ocean {
     background: #87CEEB;
-}
-
-/* Theme Variables */
-:root {
-    --bg-primary: #000000;
-    --bg-secondary: #2a1f35;
-    --border-color: #6C5B7B;
-    --text-primary: #F8B195;
-    --text-secondary: #C06C84;
-    --accent-color: #F67280;
-    --status-todo: #2a1f35;
-    --status-in-progress: #6C5B7B;
-    --status-done: #C06C84;
 }
 
 /* Theme Classes */
