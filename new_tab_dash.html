@@ -46,6 +46,88 @@
             gap: 20px;
         }
 
+        .status-icons {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-icon {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: inline-block;
+            position: relative;
+        }
+
+        .status-icon.connected {
+            background-color: #4CAF50;
+        }
+
+        .status-icon.disconnected {
+            background-color: #f44336;
+        }
+
+        .status-icon::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #fff;
+        }
+
+        .settings-icon {
+            cursor: pointer;
+            color: #888;
+            font-size: 16px;
+            transition: color 0.2s;
+        }
+
+        .settings-icon:hover {
+            color: #fff;
+        }
+
+        .settings-panel {
+            position: absolute;
+            bottom: 40px;
+            right: 20px;
+            background-color: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            width: 300px;
+            display: none;
+            z-index: 1000;
+        }
+
+        .settings-panel.visible {
+            display: block;
+        }
+
+        .settings-section {
+            margin-bottom: 15px;
+        }
+
+        .settings-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .settings-section h3 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            color: #fff;
+        }
+
+        .settings-section p {
+            margin: 0 0 5px 0;
+            font-size: 12px;
+            color: #888;
+        }
+
         .cache-info {
             font-size: 12px;
             color: #666;
@@ -174,6 +256,36 @@
         .pr-link:hover {
             text-decoration: underline;
         }
+
+        .jira-info {
+            font-size: 12px;
+            color: #666;
+            font-family: monospace;
+            white-space: nowrap;
+            min-width: 150px;
+        }
+
+        .jira-ticket {
+            margin: 8px 0;
+            padding-left: 10px;
+            border-left: 2px solid #3b7fc4;
+        }
+
+        .jira-key {
+            color: #3b7fc4;
+            font-weight: 500;
+        }
+
+        .jira-status {
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            margin-left: 8px;
+        }
+
+        .status-todo { background-color: #42526e; color: #fff; }
+        .status-in-progress { background-color: #0052cc; color: #fff; }
+        .status-done { background-color: #00875a; color: #fff; }
     </style>
 </head>
 <body>
@@ -190,6 +302,11 @@
         </div>
         <div class="pr-list" id="myPrList"></div>
 
+        <div class="pr-label">
+            <span id="jiraCount">-</span> Jira Tickets
+        </div>
+        <div class="pr-list" id="jiraList"></div>
+
         <div class="setup-message" id="setupMessage">
             <p>You need to set up a GitHub token to view PR reviews.</p>
             <a href="https://github.com/settings/tokens/new?scopes=repo&description=PR%20Review%20Counter" 
@@ -205,10 +322,72 @@
                 <button class="save-button" id="saveToken">Save Token</button>
             </div>
         </div>
+
+        <div class="setup-message" id="jiraSetupMessage">
+            <p>Configure Jira Integration</p>
+            <a href="https://support.atlassian.com/atlassian-account/docs/manage-api-tokens-for-your-atlassian-account/" 
+               target="_blank" 
+               class="setup-link">
+                How to get your Jira API token
+            </a>
+            <div id="jiraInputContainer">
+                <input type="text" 
+                       class="token-input" 
+                       id="jiraDomainInput" 
+                       placeholder="Your Jira domain (e.g., company.atlassian.net)">
+                <input type="text" 
+                       class="token-input" 
+                       id="jiraEmailInput" 
+                       placeholder="Your Jira email">
+                <input type="text" 
+                       class="token-input" 
+                       id="jiraTokenInput" 
+                       placeholder="Your Jira API token">
+                <button class="save-button" id="saveJiraConfig">Save Jira Config</button>
+            </div>
+        </div>
+
         <div class="status-bar">
+            <div class="status-icons">
+                <div class="status-icon" id="githubStatus"></div>
+                <div class="status-icon" id="jiraStatus"></div>
+            </div>
             <div class="user-info" id="userInfo"></div>
-            <div class="token-info" id="tokenInfo"></div>
             <div class="cache-info" id="cacheInfo"></div>
+            <div class="settings-icon" id="settingsIcon">⚙️</div>
+        </div>
+    </div>
+
+    <div class="settings-panel" id="settingsPanel">
+        <div class="settings-section">
+            <h3>GitHub Configuration</h3>
+            <p>Status: <span id="githubStatusText">Not connected</span></p>
+            <div id="githubConfig">
+                <input type="text" 
+                       class="token-input" 
+                       id="tokenInput" 
+                       placeholder="Paste your GitHub token here">
+                <button class="save-button" id="saveToken">Save Token</button>
+            </div>
+        </div>
+        <div class="settings-section">
+            <h3>Jira Configuration</h3>
+            <p>Status: <span id="jiraStatusText">Not connected</span></p>
+            <div id="jiraConfig">
+                <input type="text" 
+                       class="token-input" 
+                       id="jiraDomainInput" 
+                       placeholder="Your Jira domain (e.g., company.atlassian.net)">
+                <input type="text" 
+                       class="token-input" 
+                       id="jiraEmailInput" 
+                       placeholder="Your Jira email">
+                <input type="text" 
+                       class="token-input" 
+                       id="jiraTokenInput" 
+                       placeholder="Your Jira API token">
+                <button class="save-button" id="saveJiraConfig">Save Jira Config</button>
+            </div>
         </div>
     </div>
 
@@ -217,6 +396,15 @@
             token: localStorage.getItem('githubToken') || '',
             cacheDuration: 5 * 60 * 1000, // 5 minutes in milliseconds
             cachePrefix: 'github_cache_',
+            cacheTimer: null
+        };
+
+        const JIRA_CONFIG = {
+            domain: localStorage.getItem('jiraDomain') || '',
+            token: localStorage.getItem('jiraToken') || '',
+            email: localStorage.getItem('jiraEmail') || '',
+            cacheDuration: 5 * 60 * 1000, // 5 minutes in milliseconds
+            cachePrefix: 'jira_cache_',
             cacheTimer: null
         };
 
@@ -365,31 +553,23 @@
             const tokenInput = document.getElementById('tokenInput');
             const saveButton = document.getElementById('saveToken');
             const setupMessage = document.getElementById('setupMessage');
+            const githubStatus = document.getElementById('githubStatus');
+            const githubStatusText = document.getElementById('githubStatusText');
 
             if (GITHUB_CONFIG.token) {
-                const lastFour = GITHUB_CONFIG.token.slice(-4);
-                tokenInfo.innerHTML = `Token: ****${lastFour} <span class="clear-token" id="clearToken">(clear)</span>`;
+                // Update status indicator
+                githubStatus.className = 'status-icon connected';
+                githubStatusText.textContent = 'Connected';
                 
-                // Hide input and save button
-                tokenInput.style.display = 'none';
-                saveButton.style.display = 'none';
+                // Hide setup message
                 setupMessage.style.display = 'none';
-                
-                // Add clear token functionality
-                document.getElementById('clearToken').addEventListener('click', () => {
-                    localStorage.removeItem('githubToken');
-                    GITHUB_CONFIG.token = '';
-                    tokenInfo.textContent = '';
-                    setupMessage.style.display = 'block';
-                    tokenInput.style.display = 'block';
-                    saveButton.style.display = 'block';
-                    document.getElementById('prCount').textContent = '-';
-                    document.getElementById('userInfo').textContent = '';
-                });
             } else {
-                tokenInfo.textContent = '';
-                tokenInput.style.display = 'block';
-                saveButton.style.display = 'block';
+                // Update status indicator
+                githubStatus.className = 'status-icon disconnected';
+                githubStatusText.textContent = 'Not connected';
+                
+                // Show setup message
+                setupMessage.style.display = 'block';
             }
         }
 
@@ -546,6 +726,130 @@
             console.log('No existing token found');
             document.getElementById('setupMessage').style.display = 'block';
         }
+
+        function updateJiraDisplay() {
+            const jiraInfo = document.getElementById('jiraInfo');
+            const jiraDomainInput = document.getElementById('jiraDomainInput');
+            const jiraEmailInput = document.getElementById('jiraEmailInput');
+            const jiraTokenInput = document.getElementById('jiraTokenInput');
+            const saveJiraButton = document.getElementById('saveJiraConfig');
+            const jiraSetupMessage = document.getElementById('jiraSetupMessage');
+            const jiraStatus = document.getElementById('jiraStatus');
+            const jiraStatusText = document.getElementById('jiraStatusText');
+
+            if (JIRA_CONFIG.domain && JIRA_CONFIG.email && JIRA_CONFIG.token) {
+                // Update status indicator
+                jiraStatus.className = 'status-icon connected';
+                jiraStatusText.textContent = 'Connected';
+                
+                // Hide setup message
+                jiraSetupMessage.style.display = 'none';
+            } else {
+                // Update status indicator
+                jiraStatus.className = 'status-icon disconnected';
+                jiraStatusText.textContent = 'Not connected';
+                
+                // Show setup message
+                jiraSetupMessage.style.display = 'block';
+            }
+        }
+
+        async function fetchJiraTickets() {
+            try {
+                console.log('Fetching Jira tickets...');
+                if (!JIRA_CONFIG.domain || !JIRA_CONFIG.email || !JIRA_CONFIG.token) {
+                    console.log('Jira config incomplete');
+                    document.getElementById('jiraSetupMessage').style.display = 'block';
+                    return;
+                }
+
+                const response = await fetchWithCache(`https://${JIRA_CONFIG.domain}/rest/api/2/search?jql=assignee=currentUser()%20AND%20status%20not%20in%20(Done,Closed)`, {
+                    headers: {
+                        'Authorization': `Basic ${btoa(`${JIRA_CONFIG.email}:${JIRA_CONFIG.token}`)}`,
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch Jira tickets: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('Jira data:', data);
+                const ticketCount = data.total;
+                document.getElementById('jiraCount').textContent = ticketCount;
+                
+                // Update Jira ticket list
+                const jiraList = document.getElementById('jiraList');
+                jiraList.innerHTML = '';
+                data.issues.forEach(ticket => {
+                    const ticketItem = document.createElement('div');
+                    ticketItem.className = 'jira-ticket';
+                    
+                    // Get status color class
+                    let statusClass = 'status-todo';
+                    if (ticket.fields.status.name.toLowerCase().includes('progress')) {
+                        statusClass = 'status-in-progress';
+                    } else if (ticket.fields.status.name.toLowerCase().includes('done')) {
+                        statusClass = 'status-done';
+                    }
+                    
+                    ticketItem.innerHTML = `
+                        <div class="pr-title">
+                            <span class="jira-key">${ticket.key}</span>
+                            <span class="jira-status ${statusClass}">${ticket.fields.status.name}</span>
+                        </div>
+                        <a href="https://${JIRA_CONFIG.domain}/browse/${ticket.key}" 
+                           target="_blank" 
+                           class="pr-link">${ticket.fields.summary}</a>
+                    `;
+                    jiraList.appendChild(ticketItem);
+                });
+
+            } catch (error) {
+                console.error('Error in fetchJiraTickets:', error);
+                document.getElementById('errorMessage').textContent = `Jira Error: ${error.message}`;
+            }
+        }
+
+        // Setup Jira config saving
+        document.getElementById('saveJiraConfig').addEventListener('click', async () => {
+            const domain = document.getElementById('jiraDomainInput').value.trim();
+            const email = document.getElementById('jiraEmailInput').value.trim();
+            const token = document.getElementById('jiraTokenInput').value.trim();
+            
+            if (domain && email && token) {
+                localStorage.setItem('jiraDomain', domain);
+                localStorage.setItem('jiraEmail', email);
+                localStorage.setItem('jiraToken', token);
+                JIRA_CONFIG.domain = domain;
+                JIRA_CONFIG.email = email;
+                JIRA_CONFIG.token = token;
+                updateJiraDisplay();
+                await fetchJiraTickets();
+            }
+        });
+
+        // Initialize Jira display
+        updateJiraDisplay();
+        if (JIRA_CONFIG.domain && JIRA_CONFIG.email && JIRA_CONFIG.token) {
+            fetchJiraTickets();
+        }
+
+        // Settings panel toggle
+        document.getElementById('settingsIcon').addEventListener('click', () => {
+            const settingsPanel = document.getElementById('settingsPanel');
+            settingsPanel.classList.toggle('visible');
+        });
+
+        // Close settings panel when clicking outside
+        document.addEventListener('click', (event) => {
+            const settingsPanel = document.getElementById('settingsPanel');
+            const settingsIcon = document.getElementById('settingsIcon');
+            if (!settingsPanel.contains(event.target) && event.target !== settingsIcon) {
+                settingsPanel.classList.remove('visible');
+            }
+        });
     </script>
 </body>
 </html>
