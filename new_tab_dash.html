@@ -840,16 +840,13 @@
             const domain = document.getElementById('jiraDomainInput').value.trim();
             const email = document.getElementById('jiraEmailInput').value.trim();
             const token = document.getElementById('jiraTokenInput').value.trim();
-            
             if (domain && email && token) {
                 localStorage.setItem('jiraDomain', domain);
                 localStorage.setItem('jiraEmail', email);
                 localStorage.setItem('jiraToken', token);
-                
                 JIRA_CONFIG.domain = domain;
                 JIRA_CONFIG.email = email;
                 JIRA_CONFIG.token = token;
-                
                 updateJiraDisplay();
                 await fetchJiraTickets();
             }
@@ -865,7 +862,6 @@
         document.addEventListener('click', (event) => {
             const settingsPanel = document.getElementById('settingsPanel');
             const settingsIcon = document.getElementById('settingsIcon');
-            
             if (!settingsPanel.contains(event.target) && !settingsIcon.contains(event.target)) {
                 settingsPanel.classList.remove('visible');
             }
@@ -887,21 +883,17 @@
             const jiraSetupMessage = document.getElementById('jiraSetupMessage');
             const jiraStatus = document.getElementById('jiraStatus');
             const jiraStatusText = document.getElementById('jiraStatusText');
-
             console.log('Current Jira Configuration:', {
                 domain: JIRA_CONFIG.domain,
                 email: JIRA_CONFIG.email,
                 token: JIRA_CONFIG.token ? 'Present' : 'Missing'
             });
-
             if (JIRA_CONFIG.domain && JIRA_CONFIG.email && JIRA_CONFIG.token) {
                 // Update status indicator
                 jiraStatus.className = 'status-icon connected';
                 jiraStatusText.textContent = 'Connected';
-                
                 // Hide setup message
                 jiraSetupMessage.style.display = 'none';
-                
                 // Clear input fields in both locations
                 const inputs = document.querySelectorAll('#jiraDomainInput, #jiraEmailInput, #jiraTokenInput');
                 inputs.forEach(input => input.value = '');
@@ -909,7 +901,6 @@
                 // Update status indicator
                 jiraStatus.className = 'status-icon disconnected';
                 jiraStatusText.textContent = 'Not connected';
-                
                 // Show setup message
                 jiraSetupMessage.style.display = 'block';
             }
