@@ -45,6 +45,14 @@
             color: #888;
         }
 
+        .cache-info {
+            font-size: 12px;
+            color: #666;
+            font-family: monospace;
+            min-width: 100px;
+            text-align: right;
+        }
+
         .pr-count {
             font-size: 24px;
             font-weight: bold;
@@ -194,6 +202,7 @@
         <div class="status-bar">
             <div class="user-info" id="userInfo"></div>
             <div class="token-info" id="tokenInfo"></div>
+            <div class="cache-info" id="cacheInfo"></div>
         </div>
     </div>
 
@@ -201,13 +210,71 @@
         const GITHUB_CONFIG = {
             token: localStorage.getItem('githubToken') || '',
             cacheDuration: 5 * 60 * 1000, // 5 minutes in milliseconds
-            cachePrefix: 'github_cache_'
+            cachePrefix: 'github_cache_',
+            cacheTimer: null
         };
 
         // Cache management functions
         function getCacheKey(endpoint) {
             return `${GITHUB_CONFIG.cachePrefix}${endpoint}`;
         }
+
+        function updateCacheTimer() {
+            const cacheInfo = document.getElementById('cacheInfo');
+            const allCacheKeys = Object.keys(localStorage).filter(key => key.startsWith(GITHUB_CONFIG.cachePrefix));
+            
+            if (allCacheKeys.length === 0) {
+                cacheInfo.textContent = '';
+                if (GITHUB_CONFIG.cacheTimer) {
+                    clearInterval(GITHUB_CONFIG.cacheTimer);
+                    GITHUB_CONFIG.cacheTimer = null;
+                }
+                return;
+            }
+
+            let minTimeLeft = GITHUB_CONFIG.cacheDuration;
+            let hasValidCache = false;
+            
+            allCacheKeys.forEach(key => {
+                try {
+                    const { timestamp } = JSON.parse(localStorage.getItem(key));
+                    const timeLeft = GITHUB_CONFIG.cacheDuration - (Date.now() - timestamp);
+                    if (timeLeft > 0) {
+                        hasValidCache = true;
+                        minTimeLeft = Math.min(minTimeLeft, timeLeft);
+                    }
+                } catch (e) {
+                    console.error('Cache parse error:', e);
+                }
+            });
+
+            if (!hasValidCache || minTimeLeft <= 0) {
+                cacheInfo.textContent = '';
+                if (GITHUB_CONFIG.cacheTimer) {
+                    clearInterval(GITHUB_CONFIG.cacheTimer);
+                    GITHUB_CONFIG.cacheTimer = null;
+                }
+                return;
+            }
+
+            const minutes = Math.floor(minTimeLeft / 60000);
+            const seconds = Math.floor((minTimeLeft % 60000) / 1000);
+            cacheInfo.textContent = `Cache: ${minutes}m ${seconds}s`;
+        }
+
+        // Initialize cache timer if there's cached data
+        function initializeCacheTimer() {
+            const allCacheKeys = Object.keys(localStorage).filter(key => key.startsWith(GITHUB_CONFIG.cachePrefix));
+            if (allCacheKeys.length > 0) {
+                updateCacheTimer();
+                if (!GITHUB_CONFIG.cacheTimer) {
+                    GITHUB_CONFIG.cacheTimer = setInterval(updateCacheTimer, 1000);
+                }
+            }
+        }
+
+        // Call initializeCacheTimer when the page loads
+        initializeCacheTimer();
 
         function getCachedData(endpoint) {
             const cacheKey = getCacheKey(endpoint);
@@ -217,14 +284,23 @@
             try {
                 const { data, timestamp } = JSON.parse(cached);
                 const now = Date.now();
-                if (now - timestamp < GITHUB_CONFIG.cacheDuration) {
+                const timeLeft = GITHUB_CONFIG.cacheDuration - (now - timestamp);
+                
+                if (timeLeft > 0) {
+                    // Start or restart the timer if not running
+                    if (!GITHUB_CONFIG.cacheTimer) {
+                        GITHUB_CONFIG.cacheTimer = setInterval(updateCacheTimer, 1000);
+                    }
+                    updateCacheTimer();
                     return data;
                 }
                 // Cache expired, remove it
                 localStorage.removeItem(cacheKey);
+                updateCacheTimer();
                 return null;
             } catch (e) {
                 console.error('Cache parse error:', e);
+                updateCacheTimer();
                 return null;
             }
         }
@@ -237,8 +313,14 @@
             };
             try {
                 localStorage.setItem(cacheKey, JSON.stringify(cacheData));
+                // Start or restart the timer
+                if (!GITHUB_CONFIG.cacheTimer) {
+                    GITHUB_CONFIG.cacheTimer = setInterval(updateCacheTimer, 1000);
+                }
+                updateCacheTimer();
             } catch (e) {
                 console.error('Cache storage error:', e);
+                updateCacheTimer();
             }
         }
 
@@ -267,6 +349,7 @@
                 };
             } catch (error) {
                 console.error('Fetch error:', error);
+                updateCacheTimer();
                 throw error;
             }
         }
