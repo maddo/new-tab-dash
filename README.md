@@ -1,4 +1,4 @@
-# GitHub PR Dashboard
+# new-tab-dash
 
 A clean, dark-themed browser start page that displays your GitHub pull request review requests and your own open pull requests.
 
@@ -71,6 +71,6 @@ This application:
 
 Feel free to submit issues and enhancement requests!
 
-## License``
+## License
 
 MIT License - feel free to use and modify as needed. 
