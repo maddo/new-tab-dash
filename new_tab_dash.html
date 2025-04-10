@@ -69,16 +69,16 @@
             height: 16px;
             display: inline-block;
             position: relative;
-            opacity: 0.5;
-            transition: opacity 0.2s;
+            opacity: 1;
+            transition: all 0.2s;
         }
 
         .status-icon.connected {
-            opacity: 1;
+            color: #2ecc71;
         }
 
         .status-icon.disconnected {
-            opacity: 0.3;
+            color: #666;
         }
 
         .status-icon svg {
@@ -813,6 +813,7 @@
                 if (!JIRA_CONFIG.domain || !JIRA_CONFIG.email || !JIRA_CONFIG.token) {
                     console.log('Jira config incomplete');
                     document.getElementById('jiraSetupMessage').style.display = 'block';
+                    document.getElementById('jiraStatus').className = 'status-icon disconnected';
                     return;
                 }
 
@@ -836,11 +837,13 @@
                 if (!testResponse.ok) {
                     const errorText = await testResponse.text();
                     console.error('Jira authentication failed:', testResponse.status, errorText);
+                    document.getElementById('jiraStatus').className = 'status-icon disconnected';
                     throw new Error(`Jira authentication failed: ${testResponse.status}`);
                 }
 
                 const userData = await testResponse.json();
                 console.log('Jira authentication successful, logged in as:', userData.displayName);
+                document.getElementById('jiraStatus').className = 'status-icon connected';
 
                 // Now fetch the tickets
                 const jql = 'assignee=currentUser() AND status not in (Done,Closed,Resolved) ORDER BY priority DESC, updated DESC';
@@ -962,9 +965,9 @@
             // 14+ days: red
             let ageColor;
             if (diffDays === 0) {
-                ageColor = '#44ff44'; // green
+                ageColor = '#2ecc71'; // muted green
             } else if (diffDays <= 1) {
-                ageColor = '#88ff44'; // yellow-green
+                ageColor = '#5cb85c'; // muted yellow-green
             } else if (diffDays <= 3) {
                 ageColor = '#ffff44'; // yellow
             } else if (diffDays <= 7) {
@@ -981,7 +984,7 @@
                         <span class="jira-priority" style="color: ${ticket.fields.priority.iconUrl.includes('highest') ? '#ff4444' : 
                                                                  ticket.fields.priority.iconUrl.includes('high') ? '#ff8844' : 
                                                                  ticket.fields.priority.iconUrl.includes('medium') ? '#ffcc44' : 
-                                                                 '#44ff44'}">${ticket.fields.priority.name}</span>
+                                                                 '#2ecc71'}">${ticket.fields.priority.name}</span>
                     </div>
                     <a href="https://${domain}/browse/${ticket.key}" 
                        target="_blank" 
