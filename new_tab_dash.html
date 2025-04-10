@@ -71,6 +71,7 @@
             position: relative;
             opacity: 1;
             transition: all 0.2s;
+            cursor: pointer;
         }
 
         .status-icon.connected {
@@ -85,6 +86,57 @@
             width: 100%;
             height: 100%;
             fill: currentColor;
+        }
+
+        .credential-modal {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 12px;
+            min-width: 200px;
+            z-index: 1000;
+            display: none;
+            font-size: 12px;
+            color: #ccc;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .status-icon:hover .credential-modal {
+            display: block;
+        }
+
+        .credential-info {
+            margin-bottom: 8px;
+        }
+
+        .credential-info:last-child {
+            margin-bottom: 0;
+        }
+
+        .credential-label {
+            color: #888;
+            margin-right: 4px;
+        }
+
+        .credential-value {
+            font-family: monospace;
+        }
+
+        .remove-credentials {
+            color: #ff4444;
+            text-decoration: none;
+            font-size: 12px;
+            margin-top: 8px;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .remove-credentials:hover {
+            text-decoration: underline;
         }
 
         .settings-icon {
@@ -249,6 +301,18 @@
             font-family: 'Inter', sans-serif;
         }
 
+        .hide-section {
+            font-size: 12px;
+            color: #666;
+            text-decoration: none;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+
+        .hide-section:hover {
+            text-decoration: underline;
+        }
+
         .jira-key {
             color: #3b7fc4;
             font-weight: 500;
@@ -350,6 +414,7 @@
 
         <div class="pr-label">
             <span id="jiraCount">-</span> Jira Tickets
+            <a href="#" class="hide-section" id="hideJiraSection" style="display: none;">Hide</a>
         </div>
         <div class="pr-list" id="jiraList"></div>
 
@@ -400,6 +465,17 @@
                         <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
                             <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
                         </svg>
+                        <div class="credential-modal" id="githubCredentialModal">
+                            <div class="credential-info">
+                                <span class="credential-label">Username:</span>
+                                <span class="credential-value" id="githubUsernameDisplay">-</span>
+                            </div>
+                            <div class="credential-info">
+                                <span class="credential-label">Token:</span>
+                                <span class="credential-value" id="githubTokenDisplay">-</span>
+                            </div>
+                            <a class="remove-credentials" id="removeGithubCredentials">Remove credentials</a>
+                        </div>
                     </div>
                     <div class="status-icon" id="jiraStatus">
                         <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
@@ -407,6 +483,25 @@
                             <path d="M8 5.635c-1.26-1.22-1.26-3.197 0-4.417L3.554 5.183 5.554 8 8 5.635z" fill-opacity="0.3"/>
                             <path d="M10.446 8l-2.446 2.365c1.26 1.22 1.26 3.197 0 4.417l4.446-3.965L10.446 8z" fill-opacity="0.3"/>
                         </svg>
+                        <div class="credential-modal" id="jiraCredentialModal">
+                            <div class="credential-info">
+                                <span class="credential-label">Domain:</span>
+                                <span class="credential-value" id="jiraDomainDisplay">-</span>
+                            </div>
+                            <div class="credential-info">
+                                <span class="credential-label">Email:</span>
+                                <span class="credential-value" id="jiraEmailDisplay">-</span>
+                            </div>
+                            <div class="credential-info">
+                                <span class="credential-label">Token:</span>
+                                <span class="credential-value" id="jiraTokenDisplay">-</span>
+                            </div>
+                            <div class="credential-info">
+                                <span class="credential-label">Visibility:</span>
+                                <a href="#" class="hide-section" id="toggleJiraVisibility">Show/Hide Section</a>
+                            </div>
+                            <a class="remove-credentials" id="removeJiraCredentials">Remove credentials</a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -420,6 +515,7 @@
     <script>
         const GITHUB_CONFIG = {
             token: localStorage.getItem('githubToken') || '',
+            username: localStorage.getItem('githubUsername') || '',
             cacheDuration: 5 * 60 * 1000, // 5 minutes in milliseconds
             cachePrefix: 'github_cache_',
             cacheTimer: null
@@ -431,7 +527,8 @@
             email: localStorage.getItem('jiraEmail') || '',
             cacheDuration: 5 * 60 * 1000, // 5 minutes in milliseconds
             cachePrefix: 'jira_cache_',
-            cacheTimer: null
+            cacheTimer: null,
+            isVisible: localStorage.getItem('jiraVisible') !== 'false' // Default to true if not set
         };
 
         // Cache management functions
@@ -610,6 +707,8 @@
                 if (response.ok) {
                     const userData = await response.json();
                     console.log('Token valid, connected as:', userData.login);
+                    GITHUB_CONFIG.username = userData.login;
+                    localStorage.setItem('githubUsername', userData.login);
                     return true;
                 } else {
                     const errorData = await response.json();
@@ -771,33 +870,85 @@
             document.getElementById('jiraSetupMessage').style.display = 'block';
         }
 
+        // Initialize Jira visibility state
+        function initializeJiraVisibility() {
+            const jiraList = document.getElementById('jiraList');
+            const jiraCount = document.getElementById('jiraCount').parentElement;
+            const hideJiraSection = document.getElementById('hideJiraSection');
+            const toggleJiraVisibility = document.getElementById('toggleJiraVisibility');
+            const jiraSetupMessage = document.getElementById('jiraSetupMessage');
+
+            // If credentials are set, always show the tickets section
+            if (JIRA_CONFIG.domain && JIRA_CONFIG.email && JIRA_CONFIG.token) {
+                jiraList.style.display = 'block';
+                jiraCount.style.display = 'block';
+                jiraSetupMessage.style.display = 'none';
+                hideJiraSection.style.display = 'none';
+                toggleJiraVisibility.textContent = 'Hide Section';
+            } else {
+                // No credentials - show/hide based on visibility preference
+                if (JIRA_CONFIG.isVisible) {
+                    jiraSetupMessage.style.display = 'block';
+                    hideJiraSection.style.display = 'inline';
+                    toggleJiraVisibility.textContent = 'Hide Section';
+                } else {
+                    jiraSetupMessage.style.display = 'none';
+                    hideJiraSection.style.display = 'none';
+                    toggleJiraVisibility.textContent = 'Show Section';
+                }
+                jiraList.style.display = 'none';
+                jiraCount.style.display = 'none';
+            }
+        }
+
+        // Call initializeJiraVisibility when the page loads
+        initializeJiraVisibility();
+
         function updateJiraDisplay() {
             const jiraDomainInput = document.getElementById('jiraDomainInput');
             const jiraEmailInput = document.getElementById('jiraEmailInput');
             const jiraTokenInput = document.getElementById('jiraTokenInput');
             const jiraSetupMessage = document.getElementById('jiraSetupMessage');
             const jiraStatus = document.getElementById('jiraStatus');
-            const jiraStatusText = document.getElementById('jiraStatusText');
+            const hideJiraSection = document.getElementById('hideJiraSection');
+            const jiraList = document.getElementById('jiraList');
+            const jiraCount = document.getElementById('jiraCount').parentElement;
+            const toggleJiraVisibility = document.getElementById('toggleJiraVisibility');
+
             console.log('Current Jira Configuration:', {
                 domain: JIRA_CONFIG.domain,
                 email: JIRA_CONFIG.email,
-                token: JIRA_CONFIG.token ? 'Present' : 'Missing'
+                token: JIRA_CONFIG.token ? 'Present' : 'Missing',
+                isVisible: JIRA_CONFIG.isVisible
             });
-            if (JIRA_CONFIG.domain && JIRA_CONFIG.email && JIRA_CONFIG.token) {
+
+            const hasCredentials = JIRA_CONFIG.domain && JIRA_CONFIG.email && JIRA_CONFIG.token;
+
+            if (hasCredentials) {
                 // Update status indicator
                 jiraStatus.className = 'status-icon connected';
-                jiraStatusText.textContent = 'Connected';
                 // Hide setup message
                 jiraSetupMessage.style.display = 'none';
-                // Clear input fields in both locations
+                // Hide the hide link in the main area
+                hideJiraSection.style.display = 'none';
+                // Show tickets
+                jiraList.style.display = 'block';
+                jiraCount.style.display = 'block';
+                toggleJiraVisibility.textContent = 'Hide Section';
+                // Clear input fields
                 const inputs = document.querySelectorAll('#jiraDomainInput, #jiraEmailInput, #jiraTokenInput');
                 inputs.forEach(input => input.value = '');
             } else {
                 // Update status indicator
                 jiraStatus.className = 'status-icon disconnected';
-                jiraStatusText.textContent = 'Not connected';
-                // Show setup message
-                jiraSetupMessage.style.display = 'block';
+                // Show/hide setup message based on visibility
+                jiraSetupMessage.style.display = JIRA_CONFIG.isVisible ? 'block' : 'none';
+                // Show/hide the hide link based on visibility
+                hideJiraSection.style.display = JIRA_CONFIG.isVisible ? 'inline' : 'none';
+                // Hide tickets
+                jiraList.style.display = 'none';
+                jiraCount.style.display = 'none';
+                toggleJiraVisibility.textContent = JIRA_CONFIG.isVisible ? 'Hide Section' : 'Show Section';
             }
         }
 
@@ -1016,6 +1167,105 @@
             if (JIRA_CONFIG.domain && JIRA_CONFIG.email && JIRA_CONFIG.token) {
                 fetchJiraTickets();
             }
+        });
+
+        // Add credential display and removal functionality
+        function updateCredentialDisplays() {
+            // Update GitHub credential displays
+            const githubToken = GITHUB_CONFIG.token;
+            const githubTokenDisplay = document.getElementById('githubTokenDisplay');
+            const githubUsernameDisplay = document.getElementById('githubUsernameDisplay');
+            
+            if (githubToken) {
+                githubTokenDisplay.textContent = `••••${githubToken.slice(-4)}`;
+                githubUsernameDisplay.textContent = GITHUB_CONFIG.username || '-';
+            } else {
+                githubTokenDisplay.textContent = '-';
+                githubUsernameDisplay.textContent = '-';
+            }
+
+            // Update Jira credential displays
+            const jiraDomainDisplay = document.getElementById('jiraDomainDisplay');
+            const jiraEmailDisplay = document.getElementById('jiraEmailDisplay');
+            const jiraTokenDisplay = document.getElementById('jiraTokenDisplay');
+            const removeJiraCredentials = document.getElementById('removeJiraCredentials');
+            const toggleJiraVisibility = document.getElementById('toggleJiraVisibility');
+            const visibilityContainer = toggleJiraVisibility.parentElement;
+
+            jiraDomainDisplay.textContent = JIRA_CONFIG.domain || '-';
+            jiraEmailDisplay.textContent = JIRA_CONFIG.email || '-';
+            if (JIRA_CONFIG.token) {
+                jiraTokenDisplay.textContent = `••••${JIRA_CONFIG.token.slice(-4)}`;
+            } else {
+                jiraTokenDisplay.textContent = '-';
+            }
+
+            // Show/hide remove credentials link based on whether any credentials are set
+            const hasAnyJiraCredentials = JIRA_CONFIG.domain || JIRA_CONFIG.email || JIRA_CONFIG.token;
+            removeJiraCredentials.style.display = hasAnyJiraCredentials ? 'inline-block' : 'none';
+            visibilityContainer.style.display = hasAnyJiraCredentials ? 'none' : 'block';
+        }
+
+        // Add click handlers for removing credentials
+        document.getElementById('removeGithubCredentials').addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.removeItem('githubToken');
+            localStorage.removeItem('githubUsername');
+            GITHUB_CONFIG.token = '';
+            GITHUB_CONFIG.username = '';
+            updateTokenDisplay();
+            updateCredentialDisplays();
+            document.getElementById('setupMessage').style.display = 'block';
+            document.getElementById('errorMessage').textContent = '';
+        });
+
+        document.getElementById('removeJiraCredentials').addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.removeItem('jiraDomain');
+            localStorage.removeItem('jiraEmail');
+            localStorage.removeItem('jiraToken');
+            JIRA_CONFIG.domain = '';
+            JIRA_CONFIG.email = '';
+            JIRA_CONFIG.token = '';
+            JIRA_CONFIG.isVisible = true; // Set to true so the next action is to hide
+            localStorage.setItem('jiraVisible', true);
+            document.getElementById('toggleJiraVisibility').textContent = 'Hide Section';
+            updateJiraDisplay();
+            updateCredentialDisplays();
+            document.getElementById('jiraSetupMessage').style.display = 'block';
+            document.getElementById('errorMessage').textContent = '';
+        });
+
+        // Update credential displays when the page loads
+        updateCredentialDisplays();
+
+        // Update credential displays when tokens are saved
+        document.getElementById('saveToken').addEventListener('click', () => {
+            setTimeout(updateCredentialDisplays, 100);
+        });
+
+        document.getElementById('saveJiraConfig').addEventListener('click', () => {
+            setTimeout(updateCredentialDisplays, 100);
+        });
+
+        // Add click handler for toggling Jira visibility
+        document.getElementById('toggleJiraVisibility').addEventListener('click', (e) => {
+            e.preventDefault();
+            JIRA_CONFIG.isVisible = !JIRA_CONFIG.isVisible;
+            localStorage.setItem('jiraVisible', JIRA_CONFIG.isVisible);
+            updateJiraDisplay();
+            // If showing the section and no credentials are set, show the setup message
+            if (JIRA_CONFIG.isVisible && !JIRA_CONFIG.domain && !JIRA_CONFIG.email && !JIRA_CONFIG.token) {
+                document.getElementById('jiraSetupMessage').style.display = 'block';
+            }
+        });
+
+        // Add click handler for hiding Jira section from main area
+        document.getElementById('hideJiraSection').addEventListener('click', (e) => {
+            e.preventDefault();
+            JIRA_CONFIG.isVisible = false;
+            localStorage.setItem('jiraVisible', false);
+            updateJiraDisplay();
         });
     </script>
 </body>
