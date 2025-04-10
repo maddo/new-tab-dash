@@ -199,8 +199,77 @@
 
     <script>
         const GITHUB_CONFIG = {
-            token: localStorage.getItem('githubToken') || ''
+            token: localStorage.getItem('githubToken') || '',
+            cacheDuration: 5 * 60 * 1000, // 5 minutes in milliseconds
+            cachePrefix: 'github_cache_'
         };
+
+        // Cache management functions
+        function getCacheKey(endpoint) {
+            return `${GITHUB_CONFIG.cachePrefix}${endpoint}`;
+        }
+
+        function getCachedData(endpoint) {
+            const cacheKey = getCacheKey(endpoint);
+            const cached = localStorage.getItem(cacheKey);
+            if (!cached) return null;
+
+            try {
+                const { data, timestamp } = JSON.parse(cached);
+                const now = Date.now();
+                if (now - timestamp < GITHUB_CONFIG.cacheDuration) {
+                    return data;
+                }
+                // Cache expired, remove it
+                localStorage.removeItem(cacheKey);
+                return null;
+            } catch (e) {
+                console.error('Cache parse error:', e);
+                return null;
+            }
+        }
+
+        function setCachedData(endpoint, data) {
+            const cacheKey = getCacheKey(endpoint);
+            const cacheData = {
+                data,
+                timestamp: Date.now()
+            };
+            try {
+                localStorage.setItem(cacheKey, JSON.stringify(cacheData));
+            } catch (e) {
+                console.error('Cache storage error:', e);
+            }
+        }
+
+        async function fetchWithCache(url, options = {}) {
+            const cachedData = getCachedData(url);
+            if (cachedData) {
+                console.log('Using cached data for:', url);
+                return {
+                    ok: true,
+                    status: 200,
+                    json: async () => cachedData
+                };
+            }
+
+            try {
+                const response = await fetch(url, options);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                setCachedData(url, data);
+                return {
+                    ok: true,
+                    status: 200,
+                    json: async () => data
+                };
+            } catch (error) {
+                console.error('Fetch error:', error);
+                throw error;
+            }
+        }
 
         function updateTokenDisplay() {
             const tokenInfo = document.getElementById('tokenInfo');
@@ -249,7 +318,7 @@
                     }
                 });
                 
-                console.log('Token test response:', response.status);
+                console.log('Token test response status:', response.status);
                 
                 if (response.ok) {
                     const userData = await response.json();
@@ -285,17 +354,18 @@
                     document.getElementById('errorMessage').textContent = 'GitHub token is invalid or expired';
                     localStorage.removeItem('githubToken'); // Clear invalid token
                     GITHUB_CONFIG.token = '';
+                    updateTokenDisplay(); // Update UI after clearing token
                     return;
                 }
 
-                const response = await fetch('https://api.github.com/search/issues?q=is:pr+is:open+review-requested:@me', {
+                const response = await fetchWithCache('https://api.github.com/search/issues?q=is:pr+is:open+review-requested:@me', {
                     headers: {
                         'Authorization': `token ${GITHUB_CONFIG.token}`,
                         'Accept': 'application/vnd.github.v3+json'
                     }
                 });
 
-                console.log('PR fetch response:', response.status);
+                console.log('PR fetch response:', response);
 
                 if (response.status === 401) {
                     console.log('Token unauthorized');
@@ -303,6 +373,7 @@
                     document.getElementById('errorMessage').textContent = 'GitHub token is invalid or expired';
                     localStorage.removeItem('githubToken'); // Clear invalid token
                     GITHUB_CONFIG.token = '';
+                    updateTokenDisplay(); // Update UI after clearing token
                     return;
                 }
 
@@ -331,7 +402,7 @@
                 });
 
                 // Fetch user's open PRs
-                const myPrResponse = await fetch('https://api.github.com/search/issues?q=is:pr+is:open+author:@me', {
+                const myPrResponse = await fetchWithCache('https://api.github.com/search/issues?q=is:pr+is:open+author:@me', {
                     headers: {
                         'Authorization': `token ${GITHUB_CONFIG.token}`,
                         'Accept': 'application/vnd.github.v3+json'
