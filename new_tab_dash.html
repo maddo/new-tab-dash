@@ -253,13 +253,44 @@
         .pr-item {
             margin: 8px 0;
             padding-left: 10px;
-            border-left: 2px solid #333;
+            border-left: 2px solid var(--border-color);
+            transition: all 0.2s ease;
+        }
+
+        .pr-item:hover {
+            border-left-color: var(--text-primary);
+            transform: translateX(4px);
         }
 
         .pr-title {
             font-weight: 500;
             margin-bottom: 2px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
+
+        .pr-repo {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            font-family: monospace;
+        }
+
+        .pr-number {
+            color: var(--text-secondary);
+            font-family: monospace;
+        }
+
+        .pr-age {
+            font-size: 0.8em;
+            padding: 2px 6px;
+            border-radius: 3px;
+            margin-left: auto;
+        }
+
+        .pr-age-new { background-color: rgba(46, 204, 113, 0.2); color: #2ecc71; }
+        .pr-age-recent { background-color: rgba(255, 204, 68, 0.2); color: #ffcc44; }
+        .pr-age-old { background-color: rgba(255, 68, 68, 0.2); color: #ff4444; }
 
         .pr-link {
             color: #F8B195;
@@ -1036,9 +1067,28 @@
                         const repo = pr.repository_url.split('/').slice(-2).join('/');
                         const prItem = document.createElement('div');
                         prItem.className = 'pr-item';
+                        
+                        // Calculate PR age
+                        const updatedTime = new Date(pr.updated_at);
+                        const now = new Date();
+                        const diffDays = Math.floor((now - updatedTime) / (1000 * 60 * 60 * 24));
+                        
+                        let ageClass = 'pr-age-old';
+                        if (diffDays === 0) {
+                            ageClass = 'pr-age-new';
+                        } else if (diffDays <= 2) {
+                            ageClass = 'pr-age-recent';
+                        }
+                        
+                        const ageText = diffDays === 0 ? '<1d' : `${diffDays}d`;
+                        
                         prItem.innerHTML = `
-                            <div class="pr-title">${pr.title}</div>
-                            <a href="${pr.html_url}" target="_blank" class="pr-link">${repo}#${pr.number}</a>
+                            <div class="pr-title">
+                                <span class="pr-repo">${repo}</span>
+                                <span class="pr-number">#${pr.number}</span>
+                                <span class="pr-age ${ageClass}">${ageText}</span>
+                            </div>
+                            <a href="${pr.html_url}" target="_blank" class="pr-link">${pr.title}</a>
                         `;
                         prList.appendChild(prItem);
                     });
@@ -1085,17 +1135,29 @@
                     
                     // Update user's PR list
                     const myPrList = document.getElementById('myPrList');
-                    myPrList.innerHTML = '';
-                    myPrData.items.forEach(pr => {
-                        const repo = pr.repository_url.split('/').slice(-2).join('/');
-                        const prItem = document.createElement('div');
-                        prItem.className = 'pr-item';
-                        prItem.innerHTML = `
-                            <div class="pr-title">${pr.title}</div>
-                            <a href="${pr.html_url}" target="_blank" class="pr-link">${repo}#${pr.number}</a>
-                        `;
-                        myPrList.appendChild(prItem);
-                    });
+                    const myPrLabel = document.querySelector('.pr-label:has(#myPrCount)');
+                    
+                    if (myPrData.items.length === 0) {
+                        myPrList.style.display = 'none';
+                        myPrLabel.style.display = 'none';
+                    } else {
+                        myPrList.style.display = 'block';
+                        myPrLabel.style.display = 'block';
+                        myPrList.innerHTML = '';
+                        myPrData.items.forEach(pr => {
+                            const repo = pr.repository_url.split('/').slice(-2).join('/');
+                            const prItem = document.createElement('div');
+                            prItem.className = 'pr-item';
+                            prItem.innerHTML = `
+                                <div class="pr-title">
+                                    <span class="pr-repo">${repo}</span>
+                                    <span class="pr-number">#${pr.number}</span>
+                                </div>
+                                <a href="${pr.html_url}" target="_blank" class="pr-link">${pr.title}</a>
+                            `;
+                            myPrList.appendChild(prItem);
+                        });
+                    }
                 }
 
                 document.getElementById('setupMessage').style.display = 'none';
