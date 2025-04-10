@@ -46,6 +46,18 @@
             gap: 20px;
         }
 
+        .status-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-bar-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
         .status-icons {
             display: flex;
             align-items: center;
@@ -55,29 +67,24 @@
         .status-icon {
             width: 16px;
             height: 16px;
-            border-radius: 50%;
             display: inline-block;
             position: relative;
+            opacity: 0.5;
+            transition: opacity 0.2s;
         }
 
         .status-icon.connected {
-            background-color: #4CAF50;
+            opacity: 1;
         }
 
         .status-icon.disconnected {
-            background-color: #f44336;
+            opacity: 0.3;
         }
 
-        .status-icon::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background-color: #fff;
+        .status-icon svg {
+            width: 100%;
+            height: 100%;
+            fill: currentColor;
         }
 
         .settings-icon {
@@ -126,6 +133,12 @@
             margin: 0 0 5px 0;
             font-size: 12px;
             color: #888;
+        }
+
+        .connected-as {
+            font-size: 12px;
+            color: #4CAF50;
+            margin-top: 5px;
         }
 
         .cache-info {
@@ -184,7 +197,7 @@
             width: 100%;
             margin: 10px 0;
             font-family: monospace;
-            display: none; /* Hide by default */
+            display: block;
         }
 
         .save-button {
@@ -195,7 +208,8 @@
             border-radius: 4px;
             cursor: pointer;
             font-size: 14px;
-            display: none; /* Hide by default */
+            display: block;
+            margin-top: 10px;
         }
 
         .save-button:hover {
@@ -286,10 +300,25 @@
         .status-todo { background-color: #42526e; color: #fff; }
         .status-in-progress { background-color: #0052cc; color: #fff; }
         .status-done { background-color: #00875a; color: #fff; }
+
+        .clear-cache-button {
+            background: #ff4444;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .clear-cache-button:hover {
+            background: #cc0000;
+        }
     </style>
 </head>
 <body>
-    <h1>dashboard</h1>
+    <h3>new tab dash</h3>
     <div class="pr-box">
         <div class="pr-label">
             <span id="prCount">-</span> Pull Request Reviews
@@ -348,13 +377,25 @@
         </div>
 
         <div class="status-bar">
-            <div class="status-icons">
-                <div class="status-icon" id="githubStatus"></div>
-                <div class="status-icon" id="jiraStatus"></div>
+            <div class="status-bar-left">
+                <div class="settings-icon" id="settingsIcon">⚙️</div>
+                <div class="status-icons">
+                    <div class="status-icon" id="githubStatus">
+                        <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+                        </svg>
+                    </div>
+                    <div class="status-icon" id="jiraStatus">
+                        <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M2.5 0h11c1.4 0 2.5 1.1 2.5 2.5v11c0 1.4-1.1 2.5-2.5 2.5h-11C1.1 16 0 14.9 0 13.5v-11C0 1.1 1.1 0 2.5 0zm0 1C1.7 1 1 1.7 1 2.5v11c0 .8.7 1.5 1.5 1.5h11c.8 0 1.5-.7 1.5-1.5v-11c0-.8-.7-1.5-1.5-1.5h-11zM4 3h8v1H4V3zm0 2h8v1H4V5zm0 2h8v1H4V7zm0 2h8v1H4V9zm0 2h8v1H4v-1z"/>
+                        </svg>
+                    </div>
+                </div>
             </div>
-            <div class="user-info" id="userInfo"></div>
-            <div class="cache-info" id="cacheInfo"></div>
-            <div class="settings-icon" id="settingsIcon">⚙️</div>
+            <div class="status-bar-right">
+                <div class="user-info" id="userInfo"></div>
+                <div class="cache-info" id="cacheInfo"></div>
+            </div>
         </div>
     </div>
 
@@ -369,6 +410,7 @@
                        placeholder="Paste your GitHub token here">
                 <button class="save-button" id="saveToken">Save Token</button>
             </div>
+            <div class="connected-as" id="githubConnectedAs"></div>
         </div>
         <div class="settings-section">
             <h3>Jira Configuration</h3>
@@ -388,6 +430,10 @@
                        placeholder="Your Jira API token">
                 <button class="save-button" id="saveJiraConfig">Save Jira Config</button>
             </div>
+        </div>
+        <div class="settings-section">
+            <h3>Cache Management</h3>
+            <button class="clear-cache-button" id="clearCache">Clear All Caches</button>
         </div>
     </div>
 
@@ -592,15 +638,17 @@
                 if (response.ok) {
                     const userData = await response.json();
                     console.log('Token valid, connected as:', userData.login);
-                    document.getElementById('userInfo').textContent = `Connected as: ${userData.login}`;
+                    document.getElementById('githubConnectedAs').textContent = `Connected as: ${userData.login}`;
                     return true;
                 } else {
                     const errorData = await response.json();
                     console.error('Token validation failed:', response.status, errorData);
+                    document.getElementById('githubConnectedAs').textContent = '';
                     return false;
                 }
             } catch (error) {
                 console.error('Error testing token:', error);
+                document.getElementById('githubConnectedAs').textContent = '';
                 return false;
             }
         }
@@ -737,6 +785,12 @@
             const jiraStatus = document.getElementById('jiraStatus');
             const jiraStatusText = document.getElementById('jiraStatusText');
 
+            console.log('Current Jira Configuration:', {
+                domain: JIRA_CONFIG.domain,
+                email: JIRA_CONFIG.email,
+                token: JIRA_CONFIG.token ? 'Present' : 'Missing'
+            });
+
             if (JIRA_CONFIG.domain && JIRA_CONFIG.email && JIRA_CONFIG.token) {
                 // Update status indicator
                 jiraStatus.className = 'status-icon connected';
@@ -757,13 +811,50 @@
         async function fetchJiraTickets() {
             try {
                 console.log('Fetching Jira tickets...');
+                console.log('Jira Config:', {
+                    domain: JIRA_CONFIG.domain,
+                    email: JIRA_CONFIG.email,
+                    hasToken: !!JIRA_CONFIG.token
+                });
+
                 if (!JIRA_CONFIG.domain || !JIRA_CONFIG.email || !JIRA_CONFIG.token) {
                     console.log('Jira config incomplete');
                     document.getElementById('jiraSetupMessage').style.display = 'block';
                     return;
                 }
 
-                const response = await fetchWithCache(`https://${JIRA_CONFIG.domain}/rest/api/2/search?jql=assignee=currentUser()%20AND%20status%20not%20in%20(Done,Closed)`, {
+                // Ensure domain is in correct format
+                let domain = JIRA_CONFIG.domain;
+                if (!domain.includes('.atlassian.net')) {
+                    domain = `${domain}.atlassian.net`;
+                }
+
+                // First, test authentication with a simple API call
+                const testUrl = `https://${domain}/rest/api/2/myself`;
+                console.log('Testing Jira authentication...');
+                
+                const testResponse = await fetch(testUrl, {
+                    headers: {
+                        'Authorization': `Basic ${btoa(`${JIRA_CONFIG.email}:${JIRA_CONFIG.token}`)}`,
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (!testResponse.ok) {
+                    const errorText = await testResponse.text();
+                    console.error('Jira authentication failed:', testResponse.status, errorText);
+                    throw new Error(`Jira authentication failed: ${testResponse.status}`);
+                }
+
+                const userData = await testResponse.json();
+                console.log('Jira authentication successful, logged in as:', userData.displayName);
+
+                // Now fetch the tickets
+                const jql = 'assignee=currentUser() AND status not in (Done,Closed)';
+                const url = `https://${domain}/rest/api/2/search?jql=${encodeURIComponent(jql)}`;
+                console.log('Fetching Jira tickets from:', url);
+
+                const response = await fetchWithCache(url, {
                     headers: {
                         'Authorization': `Basic ${btoa(`${JIRA_CONFIG.email}:${JIRA_CONFIG.token}`)}`,
                         'Accept': 'application/json'
@@ -771,44 +862,61 @@
                 });
 
                 if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Jira API Error Response:', errorText);
                     throw new Error(`Failed to fetch Jira tickets: ${response.status}`);
                 }
 
                 const data = await response.json();
-                console.log('Jira data:', data);
+                console.log('Jira API Response:', {
+                    total: data.total,
+                    numIssues: data.issues?.length || 0,
+                    maxResults: data.maxResults
+                });
+
                 const ticketCount = data.total;
                 document.getElementById('jiraCount').textContent = ticketCount;
                 
                 // Update Jira ticket list
                 const jiraList = document.getElementById('jiraList');
                 jiraList.innerHTML = '';
-                data.issues.forEach(ticket => {
-                    const ticketItem = document.createElement('div');
-                    ticketItem.className = 'jira-ticket';
-                    
-                    // Get status color class
-                    let statusClass = 'status-todo';
-                    if (ticket.fields.status.name.toLowerCase().includes('progress')) {
-                        statusClass = 'status-in-progress';
-                    } else if (ticket.fields.status.name.toLowerCase().includes('done')) {
-                        statusClass = 'status-done';
-                    }
-                    
-                    ticketItem.innerHTML = `
-                        <div class="pr-title">
-                            <span class="jira-key">${ticket.key}</span>
-                            <span class="jira-status ${statusClass}">${ticket.fields.status.name}</span>
-                        </div>
-                        <a href="https://${JIRA_CONFIG.domain}/browse/${ticket.key}" 
-                           target="_blank" 
-                           class="pr-link">${ticket.fields.summary}</a>
-                    `;
-                    jiraList.appendChild(ticketItem);
-                });
+                
+                if (data.issues && data.issues.length > 0) {
+                    data.issues.forEach(ticket => {
+                        const ticketItem = document.createElement('div');
+                        ticketItem.className = 'jira-ticket';
+                        
+                        let statusClass = 'status-todo';
+                        if (ticket.fields.status.name.toLowerCase().includes('progress')) {
+                            statusClass = 'status-in-progress';
+                        } else if (ticket.fields.status.name.toLowerCase().includes('done')) {
+                            statusClass = 'status-done';
+                        }
+                        
+                        ticketItem.innerHTML = `
+                            <div class="pr-title">
+                                <span class="jira-key">${ticket.key}</span>
+                                <span class="jira-status ${statusClass}">${ticket.fields.status.name}</span>
+                            </div>
+                            <a href="https://${domain}/browse/${ticket.key}" 
+                               target="_blank" 
+                               class="pr-link">${ticket.fields.summary}</a>
+                        `;
+                        jiraList.appendChild(ticketItem);
+                    });
+                } else {
+                    jiraList.innerHTML = '<div class="pr-item">No tickets found</div>';
+                }
+
+                document.getElementById('jiraSetupMessage').style.display = 'none';
+                document.getElementById('errorMessage').textContent = '';
 
             } catch (error) {
                 console.error('Error in fetchJiraTickets:', error);
                 document.getElementById('errorMessage').textContent = `Jira Error: ${error.message}`;
+                document.getElementById('jiraStatus').className = 'status-icon disconnected';
+                document.getElementById('jiraStatusText').textContent = 'Error';
+                document.getElementById('jiraSetupMessage').style.display = 'block';
             }
         }
 
@@ -819,10 +927,16 @@
             const token = document.getElementById('jiraTokenInput').value.trim();
             
             if (domain && email && token) {
-                localStorage.setItem('jiraDomain', domain);
+                // Ensure domain is in correct format
+                let fullDomain = domain;
+                if (!domain.includes('.atlassian.net')) {
+                    fullDomain = `${domain}.atlassian.net`;
+                }
+                
+                localStorage.setItem('jiraDomain', fullDomain);
                 localStorage.setItem('jiraEmail', email);
                 localStorage.setItem('jiraToken', token);
-                JIRA_CONFIG.domain = domain;
+                JIRA_CONFIG.domain = fullDomain;
                 JIRA_CONFIG.email = email;
                 JIRA_CONFIG.token = token;
                 updateJiraDisplay();
@@ -850,6 +964,33 @@
                 settingsPanel.classList.remove('visible');
             }
         });
+
+        // Cache management functions
+        function clearAllCaches() {
+            // Clear GitHub caches
+            Object.keys(localStorage)
+                .filter(key => key.startsWith(GITHUB_CONFIG.cachePrefix))
+                .forEach(key => localStorage.removeItem(key));
+            
+            // Clear Jira caches
+            Object.keys(localStorage)
+                .filter(key => key.startsWith(JIRA_CONFIG.cachePrefix))
+                .forEach(key => localStorage.removeItem(key));
+            
+            // Update cache timer
+            updateCacheTimer();
+            
+            // Refresh data
+            if (GITHUB_CONFIG.token) {
+                fetchPRReviews();
+            }
+            if (JIRA_CONFIG.domain && JIRA_CONFIG.email && JIRA_CONFIG.token) {
+                fetchJiraTickets();
+            }
+        }
+
+        // Add event listener for clear cache button
+        document.getElementById('clearCache').addEventListener('click', clearAllCaches);
     </script>
 </body>
 </html>

@@ -1,76 +1,101 @@
-# new-tab-dash
+# New Tab Dashboard
 
-A clean, dark-themed browser start page that displays your GitHub pull request review requests and your own open pull requests.
+A clean, dark-themed browser start page that displays your GitHub pull request review requests, your own open pull requests, and Jira tickets.
 
 ## Features
 
 - Dark theme with clean, modern design
-- Displays count and list of PRs awaiting your review
+- Shows open PR reviews assigned to you
 - Shows your own open pull requests
-- Secure token management using localStorage
-- Real-time updates
-- Responsive design
+- Shows your open Jira tickets
+- Status indicators for GitHub and Jira connections
+- Settings panel for configuration
+- Caching to reduce API calls
 
-## Security
+## Setup Instructions
 
-This application:
-- Stores GitHub tokens securely in localStorage
-- Only displays the last 4 characters of the token
-- Automatically clears invalid tokens
-- Never exposes full tokens in the UI
-- Requires user consent for token storage
+### 1. Main Dashboard Setup
 
-## Setup
+1. Download or clone this repository
+2. Set `new_tab_dash.html` as your new tab page:
+   - Chrome: Go to `chrome://settings/` > "On startup" > "Open a specific page" > Add `file:///path/to/new_tab_dash.html`
+   - Firefox: Go to `about:preferences` > "Home" > "Custom URLs" > Add `file:///path/to/new_tab_dash.html`
 
-1. Clone this repository or download the `new_tab_dash.html` file
-2. Set up your GitHub token:
-   - Go to [GitHub Settings > Developer Settings > Personal Access Tokens](https://github.com/settings/tokens)
-   - Generate a new token with `repo` scope
-   - Copy the token and paste it into the dashboard when prompted
+### 2. CORS Extension Setup (for Jira)
 
-## Setting as Browser Start Page
+To enable Jira integration, you'll need to install a small companion extension that handles CORS:
 
-### Chrome
-1. Open Chrome settings
-2. Go to "On startup" section
-3. Select "Open a specific page or set of pages"
-4. Click "Add a new page"
-5. Enter the full path to your local HTML file:
-   ```
-   file:///path/to/your/new_tab_dash.html
-   ```
-   For example:
-   ```
-   file:///Users/username/Documents/new_tab_dash.html
-   ```
+1. Create a new directory called `jira-cors-extension` with these files:
 
-### Chromium
-1. chrome://flags/#custom-new-tab-page
+```
+jira-cors-extension/
+├── manifest.json
+└── background.js
+```
 
-### Firefox
-1. Open Firefox settings
-2. Go to "Home" section
-3. Under "Homepage and new windows", select "Custom URLs"
-4. Enter the full path to your local HTML file:
-   ```
-   file:///path/to/your/new_tab_dash.html
-   ```
-   For example:
-   ```
-   file:///Users/username/Documents/new_tab_dash.html
-   ```
+2. Load the extension in Chrome:
+   - Open Chrome and go to `chrome://extensions/`
+   - Enable "Developer mode" in the top right
+   - Click "Load unpacked" and select the `jira-cors-extension` directory
+
+### 3. Configure GitHub
+
+1. Click the gear icon in the bottom left of the new tab page
+2. Generate a GitHub token:
+   - Go to https://github.com/settings/tokens
+   - Click "Generate new token"
+   - Select the `repo` scope
+   - Copy the token
+3. Paste the token in the GitHub configuration section
+4. Click "Save Token"
+
+### 4. Configure Jira
+
+1. Click the gear icon in the bottom left of the new tab page
+2. Generate a Jira API token:
+   - Go to https://id.atlassian.com/manage/api-tokens
+   - Click "Create API token"
+   - Copy the token
+3. Enter your Jira configuration:
+   - Domain: Your Jira domain (e.g., `chesscom` for `chesscom.atlassian.net`)
+   - Email: Your Jira account email
+   - API Token: The token you generated
+4. Click "Save Jira Config"
 
 ## Troubleshooting
 
-- If the page doesn't load, ensure you're using the correct file path format
-- Make sure the file path doesn't contain spaces (use %20 for spaces if needed)
-- Verify file permissions allow the browser to read the file
-- Check browser console for any error messages
+### CORS Issues with Jira
 
-## Contributing
+If you see CORS errors in the console:
+1. Make sure the CORS extension is properly loaded
+2. Check that the background script is running
+3. Verify the extension has the necessary permissions
 
-Feel free to submit issues and enhancement requests!
+### API Token Issues
+
+If GitHub or Jira connections fail:
+1. Verify your tokens are correct
+2. Check that the tokens have the necessary permissions
+3. Try generating new tokens
+
+### Cache Issues
+
+If data isn't updating:
+1. The cache refreshes every 5 minutes
+2. You can force a refresh by reloading the page
+3. Check the cache timer in the bottom right
+
+## Development
+
+To modify the dashboard:
+1. Make changes to `new_tab_dash.html`
+2. Reload your new tab page
+
+To modify the CORS extension:
+1. Make changes to the extension files
+2. Go to `chrome://extensions/`
+3. Click the refresh icon on the extension card
 
 ## License
 
-MIT License - feel free to use and modify as needed. 
+MIT 
